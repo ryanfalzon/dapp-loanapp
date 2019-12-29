@@ -1,0 +1,9 @@
+{
+  "short_name": "Loan dApp",
+  "name": "A distributed application for loans",
+  "icons": [],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff"
+}
