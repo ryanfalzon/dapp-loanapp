@@ -4,7 +4,6 @@ import SubmitRequest from './SubmitRequest';
 import Grid from '@material-ui/core/Grid';
 
 class Borrower extends Component {
-
     render() {
         return (
             <Grid container
@@ -14,10 +13,10 @@ class Borrower extends Component {
                 spacing={3}
             >
                 <Grid item xs={6}>
-                    <SubmitRequest />
+                    <SubmitRequest web3={this.props.web3}/>
                 </Grid>
                 <Grid item xs={6}>
-                    <Requests />
+                    <Requests web3={this.props.web3}/>
                 </Grid>
             </Grid>
         );

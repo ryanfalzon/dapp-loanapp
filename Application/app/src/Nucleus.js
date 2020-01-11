@@ -17,8 +17,11 @@ import { makeStyles, useTheme } from '@material-ui/core/styles';
 import Borrower from './Borrower';
 import Guarantor from './Guarantor';
 import Lender from './Lender';
+import Store from './Store';
 import { Grid } from '@material-ui/core';
 import { Route, Link, BrowserRouter as Router } from 'react-router-dom'
+import Web3 from 'web3';
+var web3;
 
 const drawerWidth = 240;
 
@@ -58,7 +61,30 @@ const useStyles = makeStyles(theme => ({
     }
 }));
 
+function setupWeb3(){
+    if(window.ethereum){
+      window.ethereum.autoRefreshOnNetworkChange = false;
+      web3 = new Web3(window.ethereum);
+      try{
+        window.ethereum.enable().then(function(){
+          console.info('User has allowed account access to dApp');
+        });
+      }
+      catch(e){
+        console.info('User has denied account access to dApp');
+      }
+    }
+    else if(window.web3){
+      web3 = new Web3(window.web3.currentProvider);
+    }
+    else{
+      alert('You have to install MetaMask!');
+    }
+  }
+
 function Nucleus(props) {
+    setupWeb3();
+
     const { container } = props;
     const classes = useStyles();
     const theme = useTheme();
@@ -73,7 +99,12 @@ function Nucleus(props) {
             <div className={classes.toolbar} />
             <Divider />
             <List>
-                {[{ Text: 'Borrower', Icon: FingerprintIcon }, { Text: 'Guarantor', Icon: FingerprintIcon }, { Text: 'Lender', Icon: FingerprintIcon }].map((object, index) => (
+                {[
+                    { Text: 'Borrower', Icon: FingerprintIcon },
+                    { Text: 'Guarantor', Icon: FingerprintIcon },
+                    { Text: 'Lender', Icon: FingerprintIcon },
+                    { Text: 'Store', Icon: FingerprintIcon }
+                ].map((object, index) => (
                     <Link key={index} className={classes.menuLink} to={() => { return '/' + object.Text }}>
                         <ListItem button key={index}>
                             <ListItemIcon><object.Icon /></ListItemIcon>
@@ -150,9 +181,22 @@ function Nucleus(props) {
                     <div className={classes.toolbar} />
                     <div>
                         <Route exact path="/" component={Borrower} />
-                        <Route path="/Borrower" component={Borrower} />
-                        <Route path="/Guarantor" component={Guarantor} />
-                        <Route path="/Lender" component={Lender} />
+                        <Route
+                            path="/Borrower"
+                            render={(props) => <Borrower web3={web3} />}
+                        />
+                        <Route
+                            path="/Guarantor"
+                            render={(props) => <Guarantor web3={web3} />}
+                        />
+                        <Route
+                            path="/Lender"
+                            render={(props) => <Lender web3={web3} />}
+                        />
+                        <Route
+                            path="/Store"
+                            render={(props) => <Store web3={web3} />}
+                        />
                     </div>
                 </main>
             </Router>

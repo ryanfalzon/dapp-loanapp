@@ -4,7 +4,6 @@ import SubmitGuarantee from './SubmitGuarantee';
 import Grid from '@material-ui/core/Grid';
 
 class Guarantor extends Component {
-
     render() {
         return (
             <Grid container
@@ -14,10 +13,10 @@ class Guarantor extends Component {
                 spacing={3}
             >
                 <Grid item xs={6}>
-                    <SubmitGuarantee />
+                    <SubmitGuarantee web3={this.props.web3}/>
                 </Grid>
                 <Grid item xs={6}>
-                    <Guarantees />
+                    <Guarantees web3={this.props.web3}/>
                 </Grid>
             </Grid>
         );

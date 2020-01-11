@@ -5,21 +5,31 @@ import Typography from '@material-ui/core/Typography';
 import Grid from '@material-ui/core/Grid';
 import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
-import DateFnsUtils from '@date-io/date-fns';
-import {
-    MuiPickersUtilsProvider,
-    KeyboardDatePicker,
-} from '@material-ui/pickers';
+
+import loanManagerContractArtifect from "./ContractArtifects/LoanManager.json";
 
 class SubmitRequest extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            amount: 0,
-            timestamp: 0,
-            interest: 0
+            amount: '',
+            repayBy: '',
+            interest: ''
         };
     };
+
+    async componentDidMount(){
+        this.account = (await this.props.web3.eth.getAccounts())[0];
+
+        const loanManagerContractAddress = loanManagerContractArtifect.networks[await this.props.web3.eth.net.getId()].address;
+        this.loanManagerContract = new this.props.web3.eth.Contract(loanManagerContractArtifect.abi, loanManagerContractAddress);
+
+        this.updateState();
+    }
+
+    async updateState(){
+
+    }
 
     changeHanlder = (event) => {
         let name = event.target.name;
@@ -27,13 +37,19 @@ class SubmitRequest extends Component {
         this.setState({ [name]: value });
     };
 
-    dateHandler = (date) => {
-        this.setState({ timestamp: date });
-    };
-
-    submitHandler = (event) => {
-        event.preventDefault();
-        alert("You are submitting " + this.state.amount + " " + this.state.timestamp + " " + this.state.interest);
+    submitHandler = async (event) => {
+        if(((this.state.amount !== '') && (this.state.amount > 0)) && ((this.state.repayBy !== '') && (this.state.repayBy > 0)) && ((this.state.interest !== '') && (this.state.interest > 0))){
+            event.preventDefault();
+            try{
+                await this.loanManagerContract.methods.submitRequest(this.state.amount, this.state.repayBy, this.state.interest).send({from: this.account});
+            }
+            catch(e){
+                console.log(e);
+            }
+        }
+        else{
+            alert('Invalid values');
+        }
     };
 
     render() {
@@ -62,23 +78,15 @@ class SubmitRequest extends Component {
                                 fullWidth
                             />
 
-                            <MuiPickersUtilsProvider utils={DateFnsUtils}>
-                                <KeyboardDatePicker
-                                    id="timestampField"
-                                    name="timestamp"
-                                    disableToolbar
-                                    variant="inline"
-                                    format="MM/dd/yyyy"
-                                    margin="normal"
-                                    label="Date picker inline"
-                                    value={this.state.timestamp}
-                                    onChange={this.dateHandler}
-                                    KeyboardButtonProps={{
-                                        'aria-label': 'change date',
-                                    }}
-                                    fullWidth
-                                />
-                            </MuiPickersUtilsProvider>
+                            <TextField
+                                id="repayByField"
+                                name="repayBy"
+                                type="number"
+                                label="Repay By"
+                                onChange={this.changeHanlder}
+                                value={this.state.repayBy}
+                                fullWidth
+                            />
 
                             <TextField
                                 id="interestField"
@@ -91,7 +99,7 @@ class SubmitRequest extends Component {
                             />
 
                             <Button className="submitButton" type="submit" variant="contained" color="primary">
-                                Submit Request
+                                Submit
                             </Button>
                         </form>
                     </Grid>

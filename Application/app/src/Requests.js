@@ -13,16 +13,49 @@ import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
 import Tooltip from '@material-ui/core/Tooltip';
 
-class Requests extends Component {
+import loanManagerContractArtifect from "./ContractArtifects/LoanManager.json";
 
-    getRequests = () => {
-        return [
-            { id: '0x00000000000', amount: 10, interest: 1, payUntil: 123456789 },
-            { id: '0x00000000001', amount: 10, interest: 1, payUntil: 123456789 },
-            { id: '0x00000000002', amount: 10, interest: 1, payUntil: 123456789 },
-            { id: '0x00000000003', amount: 10, interest: 1, payUntil: 123456789 }
-        ];
+class Requests extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            requests: []
+        };
     };
+
+    async componentDidMount(){
+        this.account = (await this.props.web3.eth.getAccounts())[0];
+
+        const loanManagerContractAddress = loanManagerContractArtifect.networks[await this.props.web3.eth.net.getId()].address;
+        this.loanManagerContract = new this.props.web3.eth.Contract(loanManagerContractArtifect.abi, loanManagerContractAddress);
+
+        this.updateState();
+    }
+
+    async updateState(){
+        let requestIds = await this.loanManagerContract.methods.getBorrowerRequests(this.account).call();
+        let requests = [];
+        
+        var getRequestsPromise = new Promise((resolve, reject) => {
+            requestIds.forEach(async(requestId, index, array) => {
+                let request = await this.loanManagerContract.methods.getRequest(requestId).call();
+                requests.push({
+                    id: request[0],
+                    borrower: request[1],
+                    amount: request[2],
+                    repayBy: request[3],
+                    interest: request[4],
+                    status: request[5]
+                });
+                
+                if(index === array.length - 1) resolve();
+            });
+        })
+
+        getRequestsPromise.then(() => {
+            this.setState({requests});
+        });
+    }
 
     render() {
         return (
@@ -34,8 +67,7 @@ class Requests extends Component {
                     </Typography>
 
                     <List className="root">
-
-                        {this.getRequests().map((item, index) => (
+                        {this.state.requests.map((item, index) => (
                             <div key={index}>
                                 <ListItem alignItems="flex-start">
                                     <ListItemText
@@ -50,7 +82,7 @@ class Requests extends Component {
                                                 >
                                                     Amount: {item.amount}
                                                 </Typography>
-                                                {" - Interest: " + item.interest + " - Repay By: " + item.payUntil}
+                                                {" - Interest: " + item.interest + " - Repay By Block: " + item.repayBy}
                                             </React.Fragment>
                                         }
                                     />

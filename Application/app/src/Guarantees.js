@@ -7,16 +7,26 @@ import Typography from '@material-ui/core/Typography';
 import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
 
-class Guarantees extends Component {
+import loanManagerContractArtifect from "./ContractArtifects/LoanManager.json";
 
-    getGuarantees = () => {
-        return [
-            { id: '0x00000000000', amount: 10, interest: 1, payUntil: 123456789 },
-            { id: '0x00000000000', amount: 10, interest: 1, payUntil: 123456789 },
-            { id: '0x00000000000', amount: 10, interest: 1, payUntil: 123456789 },
-            { id: '0x00000000000', amount: 10, interest: 1, payUntil: 123456789 }
-        ];
+class Guarantees extends Component {
+    constructor(props) {
+        super(props);
+        this.guarantees = [];
     };
+
+    async componentDidMount(){
+        this.account = (await this.props.web3.eth.getAccounts())[0];
+
+        const loanManagerContractAddress = loanManagerContractArtifect.networks[await this.props.web3.eth.net.getId()].address;
+        this.loanManagerContract = new this.props.web3.eth.Contract(loanManagerContractArtifect.abi, loanManagerContractAddress);
+
+        this.updateState();
+    }
+
+    async updateState(){
+        this.guarantees = await this.loanManagerContract.methods.getGuarantorGuarantees(this.account).call();
+    }
 
     render() {
         return (
@@ -29,7 +39,7 @@ class Guarantees extends Component {
 
                     <List className="root">
 
-                        {this.getGuarantees().map((item, index) => (
+                        {this.guarantees.map((item, index) => (
                             <div key={index}>
                                 <ListItem alignItems="flex-start">
                                     <ListItemText

@@ -11,16 +11,26 @@ import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
 import Tooltip from '@material-ui/core/Tooltip';
 
-class Loans extends Component {
+import loanManagerContractArtifect from "./ContractArtifects/LoanManager.json";
 
-    getLoans = () => {
-        return [
-            { id: '0x00000000000', amount: 10, interest: 1, payUntil: 123456789 },
-            { id: '0x00000000000', amount: 10, interest: 1, payUntil: 123456789 },
-            { id: '0x00000000000', amount: 10, interest: 1, payUntil: 123456789 },
-            { id: '0x00000000000', amount: 10, interest: 1, payUntil: 123456789 }
-        ];
+class Loans extends Component {
+    constructor(props) {
+        super(props);
+        this.loans = [];
     };
+
+    async componentDidMount(){
+        this.account = (await this.props.web3.eth.getAccounts())[0];
+
+        const loanManagerContractAddress = loanManagerContractArtifect.networks[await this.props.web3.eth.net.getId()].address;
+        this.loanManagerContract = new this.props.web3.eth.Contract(loanManagerContractArtifect.abi, loanManagerContractAddress);
+
+        this.updateState();
+    }
+
+    async updateState(){
+        this.loans = await this.loanManagerContract.methods.getLenderLoans(this.account).call();
+    }
 
     render() {
         return (
@@ -33,7 +43,7 @@ class Loans extends Component {
 
                     <List className="root">
 
-                        {this.getLoans().map((item, index) => (
+                        {this.loans.map((item, index) => (
                             <div key={index}>
                                 <ListItem alignItems="flex-start">
                                     <ListItemText

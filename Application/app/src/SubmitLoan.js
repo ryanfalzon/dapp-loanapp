@@ -9,27 +9,58 @@ import MenuItem from '@material-ui/core/MenuItem';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
 
+import loanManagerContractArtifect from "./ContractArtifects/LoanManager.json";
+
 class SubmitLoan extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            selectedRequest: ''
+            selectedRequest: '',
+            requests: []
         };
     };
 
-    getRequests = () => {
-        return ['0x0', '0x1', '0x2'];
-    };
+    async componentDidMount(){
+        this.account = (await this.props.web3.eth.getAccounts())[0];
 
-    changeHanlder = (event) => {
+        const loanManagerContractAddress = loanManagerContractArtifect.networks[await this.props.web3.eth.net.getId()].address;
+        this.loanManagerContract = new this.props.web3.eth.Contract(loanManagerContractArtifect.abi, loanManagerContractAddress);
+
+        this.updateState();
+    }
+
+    async updateState(){
+        let requests = await this.loanManagerContract.methods.getRequests().call();
+        this.setState({requests});
+    }
+
+    changeHanlder = async (event) => {
         let name = event.target.name;
         let value = event.target.value;
         this.setState({ [name]: value });
+
+        if(name === 'selectedRequest'){
+            let requestDetails = await this.loanManagerContract.methods.getRequest(value).call();
+            let selectedRequestDetails = {
+                id: requestDetails[0],
+                borrower: requestDetails[1],
+                amount: requestDetails[2],
+                repayBy: requestDetails[3],
+                interest: requestDetails[4],
+                status: requestDetails[5]
+            }
+            this.setState({selectedRequestDetails});
+        }
     };
 
-    submitHandler = (event) => {
-        event.preventDefault();
-        alert("You are submitting " + this.state.selectedRequest);
+    submitHandler = async (event) => {
+        if(this.state.selectedRequest !== ''){
+            event.preventDefault();
+            await this.loanManagerContract.methods.submitLoan(this.state.selectedRequest).call();
+        }
+        else{
+            alert('Invalid values');
+        }
     };
 
     render() {
@@ -57,14 +88,14 @@ class SubmitLoan extends Component {
                                     onChange={this.changeHanlder}
                                     value={this.state.selectedRequest}
                                 >
-                                    {this.getRequests().map((item, index) => (
+                                    {this.state.requests.map((item, index) => (
                                         <MenuItem key={index} value={item}>{item}</MenuItem>
                                     ))}
                                 </Select>
                             </FormControl>
 
                             <Button className="submitButton" type="submit" variant="contained" color="primary">
-                                Submit Request
+                                Submit
                             </Button>
                         </form>
                     </Grid>
