@@ -16,6 +16,7 @@ contract LoanManager{
     // Mappings
     mapping(bytes32 => Request) private requestsMappedToId;         // Id => Request
     mapping(address => bytes32[]) private borrowerRequests;         // Borrower => Requests
+    mapping(bytes32 => bytes32) private loansMappedToRequests;      // Request => Loan
 
     mapping(bytes32 => Guarantee) private guaranteesMappedToId;     // Id => Guarantee
     mapping(bytes32 => bytes32) private guaranteesMappedToRequests; // Request => Guarantee
@@ -123,6 +124,14 @@ contract LoanManager{
     */
     function getBorrowerRequests(address _borrower) public view returns(bytes32[] memory){
         return borrowerRequests[_borrower];
+    }
+
+    /* Function to get the loan of the passed request
+    Parameters:
+        bytes32 _requestId - id of the request whose loan is the be returned
+    */
+    function getRequestLoan(bytes32 _requestId) public view returns(bytes32){
+        return loansMappedToRequests[_requestId];
     }
 
     /* Function to place guarantee on a loan
@@ -247,6 +256,7 @@ contract LoanManager{
         // Store request
         loansMappedToId[id] = loan;
         lenderLoans[msg.sender].push(id);
+        loansMappedToRequests[_requestId] = id;
         requestsMappedToLoans[id] = _requestId;
         loans.push(id);
 

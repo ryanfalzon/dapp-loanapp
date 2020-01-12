@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
-import Grid from '@material-ui/core/Grid';
 import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
 import InputLabel from '@material-ui/core/InputLabel';
@@ -33,8 +32,28 @@ class SubmitGuarantee extends Component {
     }
 
     async updateState(){
-        let requests = await this.loanManagerContract.methods.getRequests().call();
-        this.setState({requests});
+        let requestIds = await this.loanManagerContract.methods.getRequests().call();
+        let requests = [];
+        
+        var getRequestsPromise = new Promise((resolve, reject) => {
+            requestIds.forEach(async(requestId, index, array) => {
+                let request = await this.loanManagerContract.methods.getRequest(requestId).call();
+                requests.push({
+                    id: request[0],
+                    borrower: request[1],
+                    amount: request[2],
+                    repayBy: request[3],
+                    interest: request[4],
+                    status: request[5]
+                });
+                if(index === array.length - 1) resolve();
+            });
+        })
+        
+        getRequestsPromise.then(() => {
+            requests = requests.filter(request => request.status === '0').map(request => request.id);
+            this.setState({requests});
+        });
     }
 
     changeHanlder = async (event) => {
@@ -64,10 +83,11 @@ class SubmitGuarantee extends Component {
             }
             catch(e){
                 console.log(e);
+                alert('An error has occured while submitting guarantee');
             }
         }
         else{
-            alert('Invalid values');
+            alert('Invalid values provided');
         }
     };
 
@@ -80,79 +100,43 @@ class SubmitGuarantee extends Component {
                         Submit Guarantee
                     </Typography>
 
-                    <Grid
-                        container
-                        direction="row"
-                        justify="space-between"
-                        alignItems="flex-start"
-                        spacing={3}
-                    >
-                        <Grid item xs={6}>
-                            <Grid
-                                container
-                                direction="column"
-                                justify="center"
-                                alignItems="flex-start"
+                    <form onSubmit={this.submitHandler}>
+
+                        <FormControl className="formControl">
+                            <InputLabel id="requestLabel">Request</InputLabel>
+                            <Select
+                                labelId="requestLabel"
+                                id="requestSelect"
+                                name="selectedRequest"
+                                onChange={this.changeHanlder}
+                                value={this.state.selectedRequest}
                             >
-                                <form onSubmit={this.submitHandler}>
+                                {this.state.requests.map((item, index) => (
+                                    <MenuItem key={index} value={item}>{item}</MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
 
-                                    <FormControl className="formControl">
-                                        <InputLabel id="requestLabel">Request</InputLabel>
-                                        <Select
-                                            labelId="requestLabel"
-                                            id="requestSelect"
-                                            name="selectedRequest"
-                                            onChange={this.changeHanlder}
-                                            value={this.state.selectedRequest}
-                                        >
-                                            {this.state.requests.map((item, index) => (
-                                                <MenuItem key={index} value={item}>{item}</MenuItem>
-                                            ))}
-                                        </Select>
-                                    </FormControl>
+                        {this.state.selectedRequestDetails !== '' &&
+                            ('Amount: ' + this.state.selectedRequestDetails.amount +
+                            'LTX - Interest: ' + this.state.selectedRequestDetails.interest + 
+                            'LTX - Repay By: ' + this.state.selectedRequestDetails.repayBy)
+                        }
 
-                                    <TextField
-                                        id="interestField"
-                                        name="interest"
-                                        type="number"
-                                        label="Interest"
-                                        onChange={this.changeHanlder}
-                                        value={this.state.interest}
-                                        fullWidth
-                                    />
+                        <TextField
+                            id="interestField"
+                            name="interest"
+                            type="number"
+                            label="Interest"
+                            onChange={this.changeHanlder}
+                            value={this.state.interest}
+                            fullWidth
+                        />
 
-                                    <Button className="submitButton" type="submit" variant="contained" color="primary">
-                                        Submit
-                                    </Button>
-                                </form>
-                                
-                            </Grid>
-                        </Grid>
-                        
-                        <Grid item xs={6}>
-                            <Grid
-                                container
-                                direction="row"
-                                justify="space-between"
-                                alignItems="flex-start"
-                            >
-                                {this.state.selectedRequestDetails !== '' &&
-                                    <div>
-                                        <Typography variant="subtitle2" color="textPrimary" gutterBottom>
-                                            Amount: {this.state.selectedRequestDetails.amount}
-                                        </Typography>
-                                        <Typography variant="subtitle2" color="textPrimary" gutterBottom>
-                                            Interest: {this.state.selectedRequestDetails.interest}
-                                        </Typography>
-                                        <Typography variant="subtitle2" color="textPrimary" gutterBottom>
-                                            Repay By: {this.state.selectedRequestDetails.repayBy}
-                                        </Typography>
-                                    </div>
-                                }
-                            </Grid>
-                        </Grid>
-                        
-                    </Grid>
+                        <Button className="submitButton" type="submit" variant="contained" color="primary">
+                            Submit
+                        </Button>
+                    </form>
 
                 </CardContent>
             </Card>

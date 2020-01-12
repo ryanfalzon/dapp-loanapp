@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
 import Guarantors from './Guarantors';
-import SubmitGuarantors from './SubmitGuarantors';
+import SubmitGuarantor from './SubmitGuarantor';
 import Grid from '@material-ui/core/Grid';
 
-class GuarantorManager extends Component {
+class Administrator extends Component {
     render() {
         return (
             <Grid container
@@ -13,7 +13,7 @@ class GuarantorManager extends Component {
                 spacing={3}
             >
                 <Grid item xs={6}>
-                    <SubmitGuarantors web3={this.props.web3}/>
+                    <SubmitGuarantor web3={this.props.web3}/>
                 </Grid>
                 <Grid item xs={6}>
                     <Guarantors web3={this.props.web3}/>
@@ -23,4 +23,4 @@ class GuarantorManager extends Component {
     }
 }
 
-export default Borrower;
+export default Administrator;

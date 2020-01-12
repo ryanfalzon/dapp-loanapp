@@ -51,8 +51,14 @@ class Guarantees extends Component {
 
     getStatusName = (statusId) => {
         switch (statusId) {
+            case '1':
+                return 'Awaiting Guarantee Approval'
+                
             case '3':
                 return 'Cancelled'
+
+            case '4':
+                return 'Completed'
 
             case '5':
                 return 'Awaiting Payment'

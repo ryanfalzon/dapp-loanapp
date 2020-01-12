@@ -12,9 +12,8 @@ class SubmitGuarantor extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            guarantorAddress: ''
+            address: ''
         };
-        this.guarantors = []
     };
 
     async componentDidMount(){
@@ -22,13 +21,6 @@ class SubmitGuarantor extends Component {
 
         const guarantorManagerContractAddress = guarantorManagerContractArtifect.networks[await this.props.web3.eth.net.getId()].address;
         this.guarantorManagerContract = new this.props.web3.eth.Contract(guarantorManagerContractArtifect.abi, guarantorManagerContractAddress);
-
-        this.updateState();
-    }
-
-    async updateState(){
-        const balance = await this.loanTokenContract.methods.balanceOf(this.account).call();
-        this.setState({ balance })
     }
 
     changeHanlder = (event) => {
@@ -38,12 +30,19 @@ class SubmitGuarantor extends Component {
     };
 
     submitHandler = async (event) => {
-        if(this.state.guarantorAddress != ''){
+        if((this.state.address !== '') && (this.state.address > 0)){
             event.preventDefault();
-            await this.guarantorManagerContract.methods.AddGuarantor(this.state.guarantorAddress).call();
+            try{
+                await this.guarantorManagerContract.methods.addGuarantor(this.state.address).send({
+                    from: this.account,
+                });
+            }
+            catch(e){
+                alert('An error has occured while approving guarantor');
+            }
         }
         else{
-            alert('Invalid value');
+            alert('Invalid values provided');
         }
     };
 
@@ -53,7 +52,7 @@ class SubmitGuarantor extends Component {
                 <CardContent>
 
                     <Typography className="title" color="textPrimary" gutterBottom>
-                        Add A Guarantor
+                        Approve Guarantor
                     </Typography>
 
                     <Grid
@@ -68,14 +67,14 @@ class SubmitGuarantor extends Component {
                                 id="addressField"
                                 name="address"
                                 type="text"
-                                label="Guarantor Address"
+                                label="Address"
                                 onChange={this.changeHanlder}
-                                value={this.state.guarantorAddress}
+                                value={this.state.address}
                                 fullWidth
                             />
 
                             <Button className="submitButton" type="submit" variant="contained" color="primary">
-                                Add
+                                Approve
                             </Button>
                         </form>
                     </Grid>
@@ -86,4 +85,4 @@ class SubmitGuarantor extends Component {
     }
 }
 
-export default Store;
+export default SubmitGuarantor;

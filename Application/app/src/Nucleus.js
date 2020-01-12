@@ -8,6 +8,7 @@ import IconButton from '@material-ui/core/IconButton';
 import FingerprintIcon from '@material-ui/icons/Fingerprint';
 import LocalGroceryStoreIcon from '@material-ui/icons/LocalGroceryStore';
 import CenterFocusStrongIcon from '@material-ui/icons/CenterFocusStrong';
+import SupervisorAccountIcon from '@material-ui/icons/SupervisorAccount';
 import SendIcon from '@material-ui/icons/Send';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
@@ -24,6 +25,7 @@ import Store from './Store';
 import { Grid } from '@material-ui/core';
 import { Route, Link, BrowserRouter as Router } from 'react-router-dom'
 import Web3 from 'web3';
+import Administrator from './Administrator';
 var web3;
 
 const drawerWidth = 240;
@@ -106,7 +108,8 @@ function Nucleus(props) {
                     { Text: 'Borrower', Icon: SendIcon },
                     { Text: 'Guarantor', Icon: FingerprintIcon },
                     { Text: 'Lender', Icon: CenterFocusStrongIcon },
-                    { Text: 'Store', Icon: LocalGroceryStoreIcon }
+                    { Text: 'Store', Icon: LocalGroceryStoreIcon },
+                    { Text: 'Administrator', Icon: SupervisorAccountIcon }
                 ].map((object, index) => (
                     <Link key={index} className={classes.menuLink} to={() => { return '/' + object.Text }}>
                         <ListItem button key={index}>
@@ -183,7 +186,10 @@ function Nucleus(props) {
                 <main className={classes.content}>
                     <div className={classes.toolbar} />
                     <div>
-                        <Route exact path="/" component={Borrower} />
+                        <Route
+                            exact path="/"
+                            render={(props) => <Borrower web3={web3} />}
+                        />
                         <Route
                             path="/Borrower"
                             render={(props) => <Borrower web3={web3} />}
@@ -199,6 +205,10 @@ function Nucleus(props) {
                         <Route
                             path="/Store"
                             render={(props) => <Store web3={web3} />}
+                        />
+                        <Route
+                            path="/Administrator"
+                            render={(props) => <Administrator web3={web3} />}
                         />
                     </div>
                 </main>

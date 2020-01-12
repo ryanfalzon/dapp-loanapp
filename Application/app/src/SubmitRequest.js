@@ -46,10 +46,11 @@ class SubmitRequest extends Component {
             }
             catch(e){
                 console.log(e);
+                alert('An error has occured while submitting request');
             }
         }
         else{
-            alert('Invalid values');
+            alert('Invalid values provided');
         }
     };
 

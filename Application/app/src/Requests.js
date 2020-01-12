@@ -58,10 +58,11 @@ class Requests extends Component {
         });
     }
 
-    repayLoanhandler = async (event, item) => {
+    repayLoanHandler = async (event, item) => {
         event.preventDefault();
         try{
-            await this.loanManagerContract.methods.repayLoan(item.id).send({
+            const loanId = await this.loanManagerContract.methods.getRequestLoan(item.id).call();
+            await this.loanManagerContract.methods.repayLoan(loanId).send({
                 from: this.account
             });
         }
@@ -160,7 +161,7 @@ class Requests extends Component {
                                                                 className="inline"
                                                                 color="textPrimary"
                                                             >
-                                                                Amount: {item.status}
+                                                                Amount: {item.amount}
                                                             </Typography>
                                                             {" - Interest: " + item.interest + " - Repay By Block: " + item.repayBy + " - Status: " + this.getStatusName(item.status)}
                                                         </React.Fragment>
@@ -186,9 +187,7 @@ class Requests extends Component {
                                             <Divider component="li" />
                                         </div>
                                     :
-                                    <Typography key={index} variant="subtitle2" color="textPrimary" gutterBottom>
-                                        No current requests
-                                    </Typography>
+                                    null
                                 })}
                             </List>
                         </CardContent>
@@ -217,26 +216,26 @@ class Requests extends Component {
                                                                 className="inline"
                                                                 color="textPrimary"
                                                             >
-                                                                Amount: {item.status}
+                                                                Amount: {item.amount}
                                                             </Typography>
                                                             {" - Interest: " + item.interest + " - Repay By Block: " + item.repayBy + " - Status: " + this.getStatusName(item.status)}
                                                         </React.Fragment>
                                                     }
                                                 />
                                                 <ListItemSecondaryAction>
-                                                    <Tooltip title="Repay Loan">
-                                                        <IconButton edge="end" aria-label="repayLoan">
-                                                            <IconCreditCard />
-                                                        </IconButton>
-                                                    </Tooltip>
+                                                    {item.status === '5' &&
+                                                        <Tooltip title="Repay Loan">
+                                                            <IconButton edge="end" aria-label="repayLoan" onClick={(event) => this.repayLoanHandler(event, item)}>
+                                                                <IconCreditCard />
+                                                            </IconButton>
+                                                        </Tooltip>
+                                                    }
                                                 </ListItemSecondaryAction>
                                             </ListItem>
                                             <Divider component="li" />
                                         </div>
                                     :
-                                        <Typography key={index} variant="subtitle2" color="textPrimary" gutterBottom>
-                                            No current loans
-                                        </Typography>
+                                        null
                                 })}
                             </List>
                         </CardContent>
@@ -265,7 +264,7 @@ class Requests extends Component {
                                                                 className="inline"
                                                                 color="textPrimary"
                                                             >
-                                                                Amount: {item.status}
+                                                                Amount: {item.amount}
                                                             </Typography>
                                                             {" - Interest: " + item.interest + " - Repay By Block: " + item.repayBy + " - Status: " + this.getStatusName(item.status)}
                                                         </React.Fragment>
@@ -275,9 +274,7 @@ class Requests extends Component {
                                             <Divider component="li" />
                                         </div>
                                     :
-                                        <Typography key={index} variant="subtitle2" color="textPrimary" gutterBottom>
-                                            No Cancelled requests
-                                        </Typography>
+                                        null
                                 })}
                             </List>
                         </CardContent>

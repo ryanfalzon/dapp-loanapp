@@ -15,6 +15,7 @@ class SubmitLoan extends Component {
     constructor(props) {
         super(props);
         this.state = {
+            selectedRequestDetails: '',
             selectedRequest: '',
             requests: []
         };
@@ -49,6 +50,7 @@ class SubmitLoan extends Component {
                 interest: requestDetails[4],
                 status: requestDetails[5]
             }
+            
             this.setState({selectedRequestDetails});
         }
     };
@@ -61,10 +63,11 @@ class SubmitLoan extends Component {
             }
             catch(e){
                 console.log(e);
+                alert('An error has occured while submitting loan');
             }
         }
         else{
-            alert('Invalid values');
+            alert('Invalid values provided');
         }
     };
 
@@ -83,7 +86,8 @@ class SubmitLoan extends Component {
                         justify="center"
                         alignItems="flex-start"
                     >
-                        <form onSubmit={this.submitHandler}>
+                        <form className="formControl" onSubmit={this.submitHandler}>
+
                             <FormControl className="formControl">
                                 <InputLabel id="requestLabel">Request</InputLabel>
                                 <Select
@@ -98,6 +102,13 @@ class SubmitLoan extends Component {
                                     ))}
                                 </Select>
                             </FormControl>
+
+                            {this.state.selectedRequestDetails !== '' &&
+                                ('Amount: ' + this.state.selectedRequestDetails.amount +
+                                'LTX - Interest: ' + this.state.selectedRequestDetails.interest + 
+                                'LTX - Repay By: ' + this.state.selectedRequestDetails.repayBy)
+                            }
+                            <br></br>
 
                             <Button className="submitButton" type="submit" variant="contained" color="primary">
                                 Submit

@@ -16,7 +16,9 @@ import guarantorManagerContractArtifect from "./ContractArtifects/GuarantorManag
 class Requests extends Component {
     constructor(props) {
         super(props);
-        this.guarantors = [];
+        this.state = {
+            guarantors: []
+        }
     };
 
     async componentDidMount(){
@@ -29,7 +31,8 @@ class Requests extends Component {
     }
 
     async updateState(){
-        this.guarantors = await this.guarantorManagerContract.methods.getGuarantors().call();
+        let guarantors = await this.guarantorManagerContract.methods.getGuarantors().call();
+        this.setState({guarantors});
     }
 
     render() {
@@ -43,7 +46,7 @@ class Requests extends Component {
 
                     <List className="root">
 
-                        {this.guarantors.map((item, index) => (
+                        {this.state.guarantors.map((item, index) => (
                             <div key={index}>
                                 <ListItem alignItems="flex-start">
                                     <ListItemText
