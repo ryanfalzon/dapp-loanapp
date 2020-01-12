@@ -38,6 +38,7 @@ class SubmitRequest extends Component {
     };
 
     submitHandler = async (event) => {
+        console.log(this.account);
         if(((this.state.amount !== '') && (this.state.amount > 0)) && ((this.state.repayBy !== '') && (this.state.repayBy > 0)) && ((this.state.interest !== '') && (this.state.interest > 0))){
             event.preventDefault();
             try{

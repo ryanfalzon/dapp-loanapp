@@ -16,7 +16,9 @@ import loanManagerContractArtifect from "./ContractArtifects/LoanManager.json";
 class Loans extends Component {
     constructor(props) {
         super(props);
-        this.loans = [];
+        this.state = {
+            loans: []
+        };
     };
 
     async componentDidMount(){
@@ -29,7 +31,38 @@ class Loans extends Component {
     }
 
     async updateState(){
-        this.loans = await this.loanManagerContract.methods.getLenderLoans(this.account).call();
+        let loanIds = await this.loanManagerContract.methods.getLenderLoans(this.account).call();
+        let loans = [];
+        
+        var getLoansPromise = new Promise((resolve, reject) => {
+            loanIds.forEach(async(loanId, index, array) => {
+                let loan = await this.loanManagerContract.methods.getLoan(loanId).call();
+                loans.push({
+                    id: loan[0],
+                    lender: loan[1],
+                    status: loan[2]
+                });
+                
+                if(index === array.length - 1) resolve();
+            });
+        })
+
+        getLoansPromise.then(() => {
+            this.setState({loans});
+        });
+    }
+    
+    getStatusName = (statusId) => {
+        switch (statusId) {
+            case '3':
+                return 'Cancelled'
+
+            case '5':
+                return 'Awaiting Payment'
+        
+            default:
+                return 'Unknown'
+        }
     }
 
     render() {
@@ -43,7 +76,7 @@ class Loans extends Component {
 
                     <List className="root">
 
-                        {this.loans.map((item, index) => (
+                        {this.state.loans.map((item, index) => (
                             <div key={index}>
                                 <ListItem alignItems="flex-start">
                                     <ListItemText
@@ -56,9 +89,8 @@ class Loans extends Component {
                                                     className="inline"
                                                     color="textPrimary"
                                                 >
-                                                    Amount: {item.amount}
+                                                    Status: {this.getStatusName(item.status)}
                                                 </Typography>
-                                                {" - Interest: " + item.interest + " - Repay By: " + item.payUntil}
                                             </React.Fragment>
                                         }
                                     />

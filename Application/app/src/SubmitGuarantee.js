@@ -57,7 +57,6 @@ class SubmitGuarantee extends Component {
     };
 
     submitHandler = async (event) => {
-        console.log(this.account);
         if((this.state.selectedRequest !== '') && ((this.state.interest !== '') && (this.state.interest > 0))){
             event.preventDefault();
             try{
@@ -83,41 +82,76 @@ class SubmitGuarantee extends Component {
 
                     <Grid
                         container
-                        direction="column"
-                        justify="center"
+                        direction="row"
+                        justify="space-between"
                         alignItems="flex-start"
+                        spacing={3}
                     >
-                        <form onSubmit={this.submitHandler}>
+                        <Grid item xs={6}>
+                            <Grid
+                                container
+                                direction="column"
+                                justify="center"
+                                alignItems="flex-start"
+                            >
+                                <form onSubmit={this.submitHandler}>
 
-                            <FormControl className="formControl">
-                                <InputLabel id="requestLabel">Request</InputLabel>
-                                <Select
-                                    labelId="requestLabel"
-                                    id="requestSelect"
-                                    name="selectedRequest"
-                                    onChange={this.changeHanlder}
-                                    value={this.state.selectedRequest}
-                                >
-                                    {this.state.requests.map((item, index) => (
-                                        <MenuItem key={index} value={item}>{item}</MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
+                                    <FormControl className="formControl">
+                                        <InputLabel id="requestLabel">Request</InputLabel>
+                                        <Select
+                                            labelId="requestLabel"
+                                            id="requestSelect"
+                                            name="selectedRequest"
+                                            onChange={this.changeHanlder}
+                                            value={this.state.selectedRequest}
+                                        >
+                                            {this.state.requests.map((item, index) => (
+                                                <MenuItem key={index} value={item}>{item}</MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
 
-                            <TextField
-                                id="interestField"
-                                name="interest"
-                                type="number"
-                                label="Interest"
-                                onChange={this.changeHanlder}
-                                value={this.state.interest}
-                                fullWidth
-                            />
+                                    <TextField
+                                        id="interestField"
+                                        name="interest"
+                                        type="number"
+                                        label="Interest"
+                                        onChange={this.changeHanlder}
+                                        value={this.state.interest}
+                                        fullWidth
+                                    />
 
-                            <Button className="submitButton" type="submit" variant="contained" color="primary">
-                                Submit
-                            </Button>
-                        </form>
+                                    <Button className="submitButton" type="submit" variant="contained" color="primary">
+                                        Submit
+                                    </Button>
+                                </form>
+                                
+                            </Grid>
+                        </Grid>
+                        
+                        <Grid item xs={6}>
+                            <Grid
+                                container
+                                direction="row"
+                                justify="space-between"
+                                alignItems="flex-start"
+                            >
+                                {this.state.selectedRequestDetails !== '' &&
+                                    <div>
+                                        <Typography variant="subtitle2" color="textPrimary" gutterBottom>
+                                            Amount: {this.state.selectedRequestDetails.amount}
+                                        </Typography>
+                                        <Typography variant="subtitle2" color="textPrimary" gutterBottom>
+                                            Interest: {this.state.selectedRequestDetails.interest}
+                                        </Typography>
+                                        <Typography variant="subtitle2" color="textPrimary" gutterBottom>
+                                            Repay By: {this.state.selectedRequestDetails.repayBy}
+                                        </Typography>
+                                    </div>
+                                }
+                            </Grid>
+                        </Grid>
+                        
                     </Grid>
 
                 </CardContent>

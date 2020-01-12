@@ -12,6 +12,7 @@ import Typography from '@material-ui/core/Typography';
 import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
 import Tooltip from '@material-ui/core/Tooltip';
+import Grid from '@material-ui/core/Grid';
 
 import loanManagerContractArtifect from "./ContractArtifects/LoanManager.json";
 
@@ -57,60 +58,232 @@ class Requests extends Component {
         });
     }
 
+    repayLoanhandler = async (event, item) => {
+        event.preventDefault();
+        try{
+            await this.loanManagerContract.methods.repayLoan(item.id).send({
+                from: this.account
+            });
+        }
+        catch(e){
+            alert('An error has occured while repaying loan');
+        }
+        finally{
+            this.updateState();
+        }
+    }
+
+    acceptGuaranteeHandler = async (event, item) => {
+        event.preventDefault();
+        try{
+            await this.loanManagerContract.methods.acceptGuarantee(item.id).send({
+                from: this.account
+            });
+        }
+        catch(e){
+            alert('An error has occured while accepting guarantee');
+        }
+        finally{
+            this.updateState();
+        }
+    }
+
+    declineGuaranteeHandler = async (event, item) => {
+        event.preventDefault();
+        try{
+            await this.loanManagerContract.methods.declineGuarantee(item.id).send({
+                from: this.account
+            });
+        }
+        catch(e){
+            alert('An error has occured while declining guarantee');
+        }
+        finally{
+            this.updateState();
+        }
+    }
+
+    getStatusName = (statusId) => {
+        switch (statusId) {
+            case '0':
+                return 'Awaiting Guarantee'
+
+            case '1':
+                return 'Awaiting Guarantee Approval'
+
+            case '2':
+                return 'Awaiting Loan'
+
+            case '3':
+                return 'Cancelled'
+
+            case '4':
+                return 'Completed'
+
+            case '5':
+                return 'Awaiting Payment'
+    
+            default:
+                return 'Unknown'
+        }
+    }
+
     render() {
         return (
-            <Card className="card">
-                <CardContent>
+            <Grid
+                container
+                direction="column"
+                justify="space-between"
+                alignItems="center"
+                spacing={3}
+            >
+                <Grid className="formControl" item xs={12}>
+                    <Card className="card">
+                        
+                        <CardContent>
+                            <Typography className="title" color="textPrimary" gutterBottom>
+                                Current Requests
+                            </Typography>
 
-                    <Typography className="title" color="textPrimary" gutterBottom>
-                        Current Loan Requests
-                    </Typography>
+                            <List className="root">
+                                {this.state.requests.map((item, index) => {
+                                    return (item.status === '0' || item.status === '1' || item.status === '2') ?
+                                        <div key={index}>
+                                            <ListItem alignItems="flex-start">
+                                                <ListItemText
+                                                    primary={item.id}
+                                                    secondary={
+                                                        <React.Fragment>
+                                                            <Typography
+                                                                component="span"
+                                                                variant="body2"
+                                                                className="inline"
+                                                                color="textPrimary"
+                                                            >
+                                                                Amount: {item.status}
+                                                            </Typography>
+                                                            {" - Interest: " + item.interest + " - Repay By Block: " + item.repayBy + " - Status: " + this.getStatusName(item.status)}
+                                                        </React.Fragment>
+                                                    }
+                                                />
+                                                <ListItemSecondaryAction>
+                                                    {item.status === '1' &&
+                                                        <Tooltip title="Accept Guarantee">
+                                                            <IconButton edge="end" aria-label="acceptLoan" onClick={(event) => this.acceptGuaranteeHandler(event, item)}>
+                                                                <IconCheck />
+                                                            </IconButton>
+                                                        </Tooltip>
+                                                    }
+                                                    {item.status === '1' &&
+                                                        <Tooltip title="Decline Guarantee">
+                                                            <IconButton edge="end" aria-label="declineGuarantee" onClick={(event) => this.declineGuaranteeHandler(event, item)}>
+                                                                <IconClear />
+                                                            </IconButton>
+                                                        </Tooltip>
+                                                    }
+                                                </ListItemSecondaryAction>
+                                            </ListItem>
+                                            <Divider component="li" />
+                                        </div>
+                                    :
+                                    <Typography key={index} variant="subtitle2" color="textPrimary" gutterBottom>
+                                        No current requests
+                                    </Typography>
+                                })}
+                            </List>
+                        </CardContent>
+                    </Card>
+                </Grid>
 
-                    <List className="root">
-                        {this.state.requests.map((item, index) => (
-                            <div key={index}>
-                                <ListItem alignItems="flex-start">
-                                    <ListItemText
-                                        primary={item.id}
-                                        secondary={
-                                            <React.Fragment>
-                                                <Typography
-                                                    component="span"
-                                                    variant="body2"
-                                                    className="inline"
-                                                    color="textPrimary"
-                                                >
-                                                    Amount: {item.amount}
-                                                </Typography>
-                                                {" - Interest: " + item.interest + " - Repay By Block: " + item.repayBy}
-                                            </React.Fragment>
-                                        }
-                                    />
-                                    <ListItemSecondaryAction>
-                                        <Tooltip title="Repay Loan">
-                                            <IconButton edge="end" aria-label="repayLoan">
-                                                <IconCreditCard />
-                                            </IconButton>
-                                        </Tooltip>
-                                        <Tooltip title="Accept Guarantee">
-                                            <IconButton edge="end" aria-label="acceptGuarantee">
-                                                <IconCheck />
-                                            </IconButton>
-                                        </Tooltip>
-                                        <Tooltip title="Decline Guarantee">
-                                            <IconButton edge="end" aria-label="declineGuarantee">
-                                                <IconClear />
-                                            </IconButton>
-                                        </Tooltip>
-                                    </ListItemSecondaryAction>
-                                </ListItem>
-                                <Divider component="li" />
-                            </div>
-                        ))}
-                    </List>
+                <Grid className="formControl" item xs={12}>
+                    <Card className="card">
+                        <CardContent>
+                            <Typography className="title" color="textPrimary" gutterBottom>
+                                Current Loans
+                            </Typography>
+                            
+                            <List className="root">
+                                {this.state.requests.map((item, index) => {
+                                    return (item.status === '4' || item.status === '5') ?
+                                        <div key={index}>
+                                            <ListItem alignItems="flex-start">
+                                                <ListItemText
+                                                    primary={item.id}
+                                                    secondary={
+                                                        <React.Fragment>
+                                                            <Typography
+                                                                component="span"
+                                                                variant="body2"
+                                                                className="inline"
+                                                                color="textPrimary"
+                                                            >
+                                                                Amount: {item.status}
+                                                            </Typography>
+                                                            {" - Interest: " + item.interest + " - Repay By Block: " + item.repayBy + " - Status: " + this.getStatusName(item.status)}
+                                                        </React.Fragment>
+                                                    }
+                                                />
+                                                <ListItemSecondaryAction>
+                                                    <Tooltip title="Repay Loan">
+                                                        <IconButton edge="end" aria-label="repayLoan">
+                                                            <IconCreditCard />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                </ListItemSecondaryAction>
+                                            </ListItem>
+                                            <Divider component="li" />
+                                        </div>
+                                    :
+                                        <Typography key={index} variant="subtitle2" color="textPrimary" gutterBottom>
+                                            No current loans
+                                        </Typography>
+                                })}
+                            </List>
+                        </CardContent>
+                    </Card>
+                </Grid>
 
-                </CardContent>
-            </Card>
+                <Grid className="formControl" item xs={12}>
+                    <Card className="card">
+                        <CardContent>
+                            <Typography className="title" color="textPrimary" gutterBottom>
+                                Cancelled Requests
+                            </Typography>
+                            
+                            <List className="root">
+                                {this.state.requests.map((item, index) => {
+                                    return item.status === '3' ?
+                                        <div key={index}>
+                                            <ListItem alignItems="flex-start">
+                                                <ListItemText
+                                                    primary={item.id}
+                                                    secondary={
+                                                        <React.Fragment>
+                                                            <Typography
+                                                                component="span"
+                                                                variant="body2"
+                                                                className="inline"
+                                                                color="textPrimary"
+                                                            >
+                                                                Amount: {item.status}
+                                                            </Typography>
+                                                            {" - Interest: " + item.interest + " - Repay By Block: " + item.repayBy + " - Status: " + this.getStatusName(item.status)}
+                                                        </React.Fragment>
+                                                    }
+                                                />
+                                            </ListItem>
+                                            <Divider component="li" />
+                                        </div>
+                                    :
+                                        <Typography key={index} variant="subtitle2" color="textPrimary" gutterBottom>
+                                            No Cancelled requests
+                                        </Typography>
+                                })}
+                            </List>
+                        </CardContent>
+                    </Card>
+                </Grid>
+            </Grid>
         );
     };
 }

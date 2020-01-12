@@ -12,7 +12,9 @@ import loanManagerContractArtifect from "./ContractArtifects/LoanManager.json";
 class Guarantees extends Component {
     constructor(props) {
         super(props);
-        this.guarantees = [];
+        this.state = {
+            guarantees: []
+        };
     };
 
     async componentDidMount(){
@@ -25,7 +27,39 @@ class Guarantees extends Component {
     }
 
     async updateState(){
-        this.guarantees = await this.loanManagerContract.methods.getGuarantorGuarantees(this.account).call();
+        let guaranteeIds = await this.loanManagerContract.methods.getGuarantorGuarantees(this.account).call();
+        let guarantees = [];
+        
+        var getGuaranteesPromise = new Promise((resolve, reject) => {
+            guaranteeIds.forEach(async(guaranteeId, index, array) => {
+                let guarantee = await this.loanManagerContract.methods.getGuarantee(guaranteeId).call();
+                guarantees.push({
+                    id: guarantee[0],
+                    guarantor: guarantee[1],
+                    interest: guarantee[2],
+                    status: guarantee[3]
+                });
+                
+                if(index === array.length - 1) resolve();
+            });
+        })
+
+        getGuaranteesPromise.then(() => {
+            this.setState({guarantees});
+        });
+    }
+
+    getStatusName = (statusId) => {
+        switch (statusId) {
+            case '3':
+                return 'Cancelled'
+
+            case '5':
+                return 'Awaiting Payment'
+        
+            default:
+                return 'Unknown'
+        }
     }
 
     render() {
@@ -39,7 +73,7 @@ class Guarantees extends Component {
 
                     <List className="root">
 
-                        {this.guarantees.map((item, index) => (
+                        {this.state.guarantees.map((item, index) => (
                             <div key={index}>
                                 <ListItem alignItems="flex-start">
                                     <ListItemText
@@ -52,9 +86,9 @@ class Guarantees extends Component {
                                                     className="inline"
                                                     color="textPrimary"
                                                 >
-                                                    Amount: {item.amount}
+                                                    Interest: {item.interest}LTX
                                                 </Typography>
-                                                {" - Interest: " + item.interest + " - Repay By: " + item.payUntil}
+                                                {" - Status: " + this.getStatusName(item.status)}
                                             </React.Fragment>
                                         }
                                     />

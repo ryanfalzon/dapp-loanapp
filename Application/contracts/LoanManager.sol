@@ -61,14 +61,14 @@ contract LoanManager{
         States state;
     }
     enum States{
-        AwaitingGuarantee,
-        AwaitingGuaranteeApproval,
-        AwaitingLoan,
-        Cancelled,
-        Completed,
-        AwaitingPayment,
-        GuaranteeWithdrawn,
-        Overdue
+        AwaitingGuarantee,          // 0
+        AwaitingGuaranteeApproval,  // 1
+        AwaitingLoan,               // 2
+        Cancelled,                  // 3
+        Completed,                  // 4
+        AwaitingPayment,            // 5
+        GuaranteeWithdrawn,         // 6
+        Overdue                     // 7
     }
 
     // Contract constructor
@@ -238,7 +238,7 @@ contract LoanManager{
 
         // Send tokens to borrower
         require(loanToken.transferFrom(msg.sender, request.borrower, request.amount), 'An error occured while transfering tokens');
-        updateRequestState(_requestId, States.Completed);
+        updateRequestState(_requestId, States.AwaitingPayment);
 
         // Create the loan object
         bytes32 id = keccak256(abi.encodePacked(msg.sender, now));
@@ -309,6 +309,7 @@ contract LoanManager{
         require(loanToken.transfer(loan.lender, amountToLender), 'Error occured while sending tokens to lender');
         require(loanToken.transfer(guarantee.guarantor, amountToGuarantor), 'Error occured while sending tokens back to guarantor');
 
+        updateRequestState(request.id, States.Completed);
         updateLoanState(_loanId, States.Completed);
         updateGuaranteeState(guarantee.id, States.Completed);
 
@@ -331,8 +332,9 @@ contract LoanManager{
         // Withdraw guarantee
         require(loanToken.transfer(loan.lender, request.amount), 'Error occured while transfering guarantee to lender');
 
-        updateLoanState(_loanId, States.Cancelled);
-        updateGuaranteeState(guaranteesMappedToId[guaranteesMappedToRequests[request.id]].id, States.Cancelled);
+        updateRequestState(request.id, States.Overdue);
+        updateLoanState(_loanId, States.Overdue);
+        updateGuaranteeState(guaranteesMappedToId[guaranteesMappedToRequests[request.id]].id, States.GuaranteeWithdrawn);
 
         // Emit event
         emit GuaranteeWithdrawn();

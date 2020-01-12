@@ -6,6 +6,9 @@ import Drawer from '@material-ui/core/Drawer';
 import Hidden from '@material-ui/core/Hidden';
 import IconButton from '@material-ui/core/IconButton';
 import FingerprintIcon from '@material-ui/icons/Fingerprint';
+import LocalGroceryStoreIcon from '@material-ui/icons/LocalGroceryStore';
+import CenterFocusStrongIcon from '@material-ui/icons/CenterFocusStrong';
+import SendIcon from '@material-ui/icons/Send';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
@@ -100,10 +103,10 @@ function Nucleus(props) {
             <Divider />
             <List>
                 {[
-                    { Text: 'Borrower', Icon: FingerprintIcon },
+                    { Text: 'Borrower', Icon: SendIcon },
                     { Text: 'Guarantor', Icon: FingerprintIcon },
-                    { Text: 'Lender', Icon: FingerprintIcon },
-                    { Text: 'Store', Icon: FingerprintIcon }
+                    { Text: 'Lender', Icon: CenterFocusStrongIcon },
+                    { Text: 'Store', Icon: LocalGroceryStoreIcon }
                 ].map((object, index) => (
                     <Link key={index} className={classes.menuLink} to={() => { return '/' + object.Text }}>
                         <ListItem button key={index}>

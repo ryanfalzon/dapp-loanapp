@@ -56,7 +56,12 @@ class SubmitLoan extends Component {
     submitHandler = async (event) => {
         if(this.state.selectedRequest !== ''){
             event.preventDefault();
-            await this.loanManagerContract.methods.submitLoan(this.state.selectedRequest).call();
+            try{
+                await this.loanManagerContract.methods.submitLoan(this.state.selectedRequest).send({from: this.account});
+            }
+            catch(e){
+                console.log(e);
+            }
         }
         else{
             alert('Invalid values');
