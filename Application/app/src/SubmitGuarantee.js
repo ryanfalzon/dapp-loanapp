@@ -19,6 +19,7 @@ class SubmitGuarantee extends Component {
             selectedRequestDetails: '',
             interest: '',
             requests: [],
+            loanManagerContractAddress: ''
         };
     };
 
@@ -27,6 +28,7 @@ class SubmitGuarantee extends Component {
 
         const loanManagerContractAddress = loanManagerContractArtifect.networks[await this.props.web3.eth.net.getId()].address;
         this.loanManagerContract = new this.props.web3.eth.Contract(loanManagerContractArtifect.abi, loanManagerContractAddress);
+        this.setState({loanManagerContractAddress});
 
         this.updateState();
     }
@@ -98,6 +100,9 @@ class SubmitGuarantee extends Component {
 
                     <Typography className="title" color="textPrimary" gutterBottom>
                         Submit Guarantee
+                    </Typography>
+                    <Typography variant="caption" color="textSecondary" className="italic" gutterBottom>
+                        Remeber to first delegate tokens to the LoanManager contract address '{this.state.loanManagerContractAddress}' from the store page.
                     </Typography>
 
                     <form onSubmit={this.submitHandler}>

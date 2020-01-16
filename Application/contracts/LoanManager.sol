@@ -390,7 +390,7 @@ contract LoanManager{
 
     // Modifier to check if message sneder is a guarantor
     modifier RequireGuarantorStatus(){
-        require(msg.sender == msg.sender, "Guarantor status required");
+        require(guarantorManager.isGuarantor(msg.sender) == true, "Guarantor status required");
         _;
     }
 

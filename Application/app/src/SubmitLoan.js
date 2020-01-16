@@ -17,7 +17,8 @@ class SubmitLoan extends Component {
         this.state = {
             selectedRequestDetails: '',
             selectedRequest: '',
-            requests: []
+            requests: [],
+            loanManagerContractAddress: ''
         };
     };
 
@@ -26,6 +27,7 @@ class SubmitLoan extends Component {
 
         const loanManagerContractAddress = loanManagerContractArtifect.networks[await this.props.web3.eth.net.getId()].address;
         this.loanManagerContract = new this.props.web3.eth.Contract(loanManagerContractArtifect.abi, loanManagerContractAddress);
+        this.setState({loanManagerContractAddress});
 
         this.updateState();
     }
@@ -78,6 +80,9 @@ class SubmitLoan extends Component {
 
                     <Typography className="title" color="textPrimary" gutterBottom>
                         Submit Loan
+                    </Typography>
+                    <Typography variant="caption" color="textSecondary" className="italic" gutterBottom>
+                        Remeber to first delegate tokens to the LoanManager contract address '{this.state.loanManagerContractAddress}' from the store page.
                     </Typography>
 
                     <Grid

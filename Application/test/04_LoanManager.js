@@ -1,9 +1,11 @@
 var LoanToken = artifacts.require('./contracts/LoanToken.sol');
 var LoanManager = artifacts.require('./contracts/LoanManager.sol');
+var GuarantorManager = artifacts.require('./contracts/GuarantorManager.sol');
 
 contract('LoanManager', function(accounts){
     var loanManagerInstance;
     var loanTokenInstance;
+    var guarantorManagerInstance;
     var borrower = accounts[1];
     var guarantor = accounts[2];
     var lender = accounts[3];
@@ -73,7 +75,12 @@ contract('LoanManager', function(accounts){
     });
 
     it('should submit a guarantee successfully', function(){
-        return LoanToken.deployed().then(function(instance){
+        return GuarantorManager.deployed().then(function(instance){
+            guarantorManagerInstance = instance;
+            return guarantorManagerInstance.addGuarantor(guarantor, {from: accounts[0]});
+        }).then(function(){
+            return LoanToken.deployed();
+        }).then(function(instance){
             loanTokenInstance = instance;
             return LoanManager.deployed();
         }).then(function(instance){

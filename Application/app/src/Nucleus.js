@@ -45,24 +45,28 @@ const styles = (theme) => ({
         flexGrow: 1,
         padding: theme.spacing(3)
     },
+    menuLink: {
+        textDecoration: 'none',
+        color: 'black'
+    },
     toolbar: theme.mixins.toolbar
 });
 
 class Nucleus extends Component {
     constructor(props) {
         super(props);
-        this.sitemap = [
-            { Text: "Borrower", Icon: SendIcon },
-            { Text: "Guarantor", Icon: FingerprintIcon },
-            { Text: "Lender", Icon: CenterFocusStrongIcon },
-            { Text: "Store", Icon: LocalGroceryStoreIcon },
-            { Text: "Administrator", Icon: SupervisorAccountIcon }
-        ];
         this.state = {
             balance: 0,
             address: '',
             isAdmin: false,
-            isGuarantor: false
+            isGuarantor: false,
+            sitemap: [
+                { Text: "Borrower", Icon: SendIcon },
+                { Text: "Guarantor", Icon: FingerprintIcon },
+                { Text: "Lender", Icon: CenterFocusStrongIcon },
+                { Text: "Store", Icon: LocalGroceryStoreIcon },
+                { Text: "Administrator", Icon: SupervisorAccountIcon }
+            ]
         }
         this.setupWeb3();
     };
@@ -80,11 +84,23 @@ class Nucleus extends Component {
         let balance = (await this.web3.eth.getBalance(address))/1000000000000000000;
         this.setState({balance});
 
-        let isAdmin = (await this.loanManagerContract.methods.administrator().call()) == this.state.address;
+        let isAdmin = (await this.loanManagerContract.methods.administrator().call()) === this.state.address;
         this.setState({isAdmin});
+        if(!isAdmin){
+            let sitemap = this.state.sitemap.filter(function(node){
+                return node.Text !== 'Administrator'
+            });
+            this.setState({sitemap});
+        }
 
         let isGuarantor = await this.guarantorManagerContract.methods.isGuarantor(this.state.address).call();
         this.setState({isGuarantor});
+        if(!isGuarantor){
+            let sitemap = this.state.sitemap.filter(function(node){
+                return node.Text !== 'Guarantor'
+            });
+            this.setState({sitemap});
+        }
     }
 
     setupWeb3 = () => {
@@ -122,7 +138,7 @@ class Nucleus extends Component {
                                     Loan dApp
                                 </Typography>
                                 <Typography variant="caption" noWrap>
-                                    ETH: {this.state.balance}ETH | Address: {this.state.address}
+                                    Balance: {this.state.balance}ETH | Address: {this.state.address}
                                 </Typography>
                             </Grid>
                         </Toolbar>
@@ -130,7 +146,7 @@ class Nucleus extends Component {
                     <Drawer className={classes.drawer} variant="permanent" classes={{paper: classes.drawerPaper}}>
                         <div className={classes.toolbar} />
                         <List>
-                            {this.sitemap.map((object, index) => (
+                            {this.state.sitemap.map((object, index) => (
                                 <Link key={index} className={classes.menuLink} to={() => { return '/' + object.Text }}>
                                     <ListItem button key={index}>
                                         <ListItemIcon><object.Icon /></ListItemIcon>
@@ -152,10 +168,12 @@ class Nucleus extends Component {
                                 path="/Borrower"
                                 render={(props) => <Borrower web3={this.web3} />}
                             />
-                            <Route
-                                path="/Guarantor"
-                                render={(props) => <Guarantor web3={this.web3} />}
-                            />
+                            { true &&
+                                <Route
+                                    path="/Guarantor"
+                                    render={(props) => <Guarantor web3={this.web3} />}
+                                />                                
+                            }
                             <Route
                                 path="/Lender"
                                 render={(props) => <Lender web3={this.web3} />}
@@ -164,10 +182,12 @@ class Nucleus extends Component {
                                 path="/Store"
                                 render={(props) => <Store web3={this.web3} />}
                             />
-                            <Route
-                                path="/Administrator"
-                                render={(props) => <Administrator web3={this.web3} />}
-                            />
+                            { this.state.isAdmin &&
+                                <Route
+                                    path="/Administrator"
+                                    render={(props) => <Administrator web3={this.web3} />}
+                                />                                
+                            }
                         </div>
                     </main>
                 </Router>
