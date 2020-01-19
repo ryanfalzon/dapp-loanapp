@@ -3,7 +3,7 @@ var LoanToken = artifacts.require("./contracts/LoanToken.sol");
 contract('LoanToken', function(accounts) {
     var tokenInstance;
 
-    it('initializes the contract with the correct values', function(){
+    it('should initialize the contract with the correct values', function(){
         return LoanToken.deployed().then(function(instance){
             tokenInstance = instance;
             return tokenInstance.name();
@@ -18,7 +18,7 @@ contract('LoanToken', function(accounts) {
         });
     });
 
-    it('allocates initial supply upon deployment', function(){
+    it('should allocate the initial supply upon deployment', function(){
         return LoanToken.deployed().then(function(instance){
             tokenInstance = instance;
             return tokenInstance.totalSupply();
@@ -33,7 +33,7 @@ contract('LoanToken', function(accounts) {
         });
     });
 
-    it('transfers ownership', function(){
+    it('should transfers ownership of tokens', function(){
         return LoanToken.deployed().then(function(instance){
             tokenInstance = instance;
             return tokenInstance.transfer.call(accounts[1], 1000001);
@@ -67,7 +67,7 @@ contract('LoanToken', function(accounts) {
         });
     });
 
-    it('approves tokens for delegated transfer', function(){
+    it('should approve tokens for delegated transfer', function(){
         return LoanToken.deployed().then(function(instance){
             tokenInstance = instance;
             return tokenInstance.approve.call(accounts[1], 100);
@@ -91,7 +91,7 @@ contract('LoanToken', function(accounts) {
         });
     });
 
-    it('handles delegated token transfers', function(){
+    it('should handle delegated token transfers', function(){
         return LoanToken.deployed().then(function(instance){
             tokenInstance = instance;
             fromAccount = accounts[2];

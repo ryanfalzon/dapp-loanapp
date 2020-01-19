@@ -17,6 +17,7 @@ contract LoanManager{
     mapping(bytes32 => Request) private requestsMappedToId;         // Id => Request
     mapping(address => bytes32[]) private borrowerRequests;         // Borrower => Requests
     mapping(bytes32 => bytes32) private loansMappedToRequests;      // Request => Loan
+    mapping(bytes32 => bool) private requestGuaranteeSubmitted;     // Request => bool
 
     mapping(bytes32 => Guarantee) private guaranteesMappedToId;     // Id => Guarantee
     mapping(bytes32 => bytes32) private guaranteesMappedToRequests; // Request => Guarantee
@@ -59,6 +60,7 @@ contract LoanManager{
     struct Loan{
         bytes32 id;
         address payable lender;
+        uint256 interest;
         States state;
     }
     enum States{
@@ -143,14 +145,17 @@ contract LoanManager{
         Request memory request = requestsMappedToId[_requestId];
 
         // Check request parameters - Interest should be less than that specified in request and guarantor should have enough tokens
+        require(request.state == States.AwaitingGuarantee, 'Request is in an invalid state');
         require(_interestRequest <= request.interest, 'Interest should be less than interest offered by borrower');
         require(loanToken.balanceOf(msg.sender) >= request.amount, 'You do not have enough tokens to guarantee this loan');
+
 
         // Create the guarantee object
         bytes32 id = keccak256(abi.encodePacked(msg.sender, _interestRequest, now));
         Guarantee memory guarantee = Guarantee(id, msg.sender, _interestRequest, States.AwaitingGuaranteeApproval);
 
         // Transfer tokens from guarantor to address of this contract
+        updateRequestState(_requestId, States.AwaitingGuaranteeApproval);
         require(loanToken.transferFrom(msg.sender, address(this), request.amount), 'Error occured while withdrawing tokens from message sender');
 
         // Store guarantee
@@ -158,7 +163,6 @@ contract LoanManager{
         guarantorGuarantees[msg.sender].push(id);
         guaranteesMappedToRequests[_requestId] = id;
         guarantees.push(id);
-        updateRequestState(_requestId, States.AwaitingGuaranteeApproval);
 
         // Emit event
         emit GuaranteeSubmitted(id);
@@ -201,9 +205,10 @@ contract LoanManager{
     */
     function acceptGuarantee(bytes32 _requestId) public RequireRequestBorrowerStatus(_requestId) {
         // Check request parameters - A guarantee needs to be provided for a request
-        require(requestsMappedToId[_requestId].state == States.AwaitingGuaranteeApproval, 'No guarantee has been provided for this request');
+        require(requestsMappedToId[_requestId].state == States.AwaitingGuaranteeApproval, 'Request is in an invalid state');
 
         // Update request and guarantee state
+        requestGuaranteeSubmitted[_requestId] = true;
         updateRequestState(_requestId, States.AwaitingLoan);
         updateGuaranteeState(guaranteesMappedToRequests[_requestId], States.AwaitingPayment);
 
@@ -217,18 +222,18 @@ contract LoanManager{
     */
     function declineGuarantee(bytes32 _requestId) public RequireRequestBorrowerStatus(_requestId) payable{
         // Check request parameters - A guarantee needs to be provided for a request
-        require(requestsMappedToId[_requestId].state == States.AwaitingGuaranteeApproval, 'No guarantee has been provided for this request');
+        require(requestsMappedToId[_requestId].state == States.AwaitingGuaranteeApproval, 'Request is in an invalid state');
 
         Request memory request = requestsMappedToId[_requestId];
         Guarantee memory guarantee = guaranteesMappedToId[guaranteesMappedToRequests[_requestId]];
 
-        // Send money back to guarantor
-        require(loanToken.transfer(guarantee.guarantor, request.amount),
-            'An error occured while transfering tokens from contract to guarantor');
-
         // Update request and guarantee state
         updateRequestState(_requestId, States.Cancelled);
         updateGuaranteeState(guaranteesMappedToRequests[_requestId], States.Cancelled);
+
+        // Send money back to guarantor
+        require(loanToken.transfer(guarantee.guarantor, request.amount),
+            'An error occured while transfering tokens from contract to guarantor');
 
         // Emit event
         emit GuaranteeDeclined();
@@ -242,16 +247,17 @@ contract LoanManager{
         Request memory request = requestsMappedToId[_requestId];
 
         // Check request paramaters - guarantee needs to be accepted and lender needs to have enough tokens
-        require(request.state == States.AwaitingLoan, 'No guarantee has been accepted for this request');
+        require(request.state == States.AwaitingLoan, 'Request is in an invalid state');
         require(loanToken.balanceOf(msg.sender) >= request.amount, 'You do not have enough tokens to provide this loan');
 
         // Send tokens to borrower
-        require(loanToken.transferFrom(msg.sender, request.borrower, request.amount), 'An error occured while transfering tokens');
         updateRequestState(_requestId, States.AwaitingPayment);
+        require(loanToken.transferFrom(msg.sender, request.borrower, request.amount), 'An error occured while transfering tokens');
 
         // Create the loan object
         bytes32 id = keccak256(abi.encodePacked(msg.sender, now));
-        Loan memory loan = Loan(id, msg.sender, States.AwaitingPayment);
+        uint256 interest = request.interest - guaranteesMappedToId[guaranteesMappedToRequests[_requestId]].interest;
+        Loan memory loan = Loan(id, msg.sender, interest, States.AwaitingPayment);
 
         // Store request
         loansMappedToId[id] = loan;
@@ -306,22 +312,23 @@ contract LoanManager{
         uint256 totalAmount = request.amount + request.interest;
 
         // Check request parameters - Loean needs to be provided for the request and borrower needs to have enough tokens to cover payment
-        require(loan.state == States.AwaitingPayment, 'Invalid status for loan matching passed Id');
+        require(loan.state == States.AwaitingPayment, 'Loan is in an invalid state');
         require(loanToken.balanceOf(msg.sender) >= totalAmount, 'You do not have enough tokens to repay the loan');
+
+        // Update state
+        updateRequestState(request.id, States.Completed);
+        updateLoanState(_loanId, States.Completed);
+        updateGuaranteeState(guarantee.id, States.Completed);
 
         // Send money back to Lender and guarantor
         uint256 amountToGuarantor = request.amount + guarantee.interest;
-        uint256 amountToLender = request.amount + (request.interest - guarantee.interest);
+        uint256 amountToLender = request.amount + loan.interest;
         require(loanToken.transferFrom(request.borrower, address(this), totalAmount),
             'Error occured while withdrawing tokens from message sender');
         require(loanToken.approve(address(this), totalAmount),
             'Error occured while approving amount to be spent by contract from borrower');
         require(loanToken.transfer(loan.lender, amountToLender), 'Error occured while sending tokens to lender');
         require(loanToken.transfer(guarantee.guarantor, amountToGuarantor), 'Error occured while sending tokens back to guarantor');
-
-        updateRequestState(request.id, States.Completed);
-        updateLoanState(_loanId, States.Completed);
-        updateGuaranteeState(guarantee.id, States.Completed);
 
         // Emit event
         emit LoanRepaid();
@@ -336,15 +343,16 @@ contract LoanManager{
         Loan memory loan = loansMappedToId[_loanId];
 
         // Check request parameters
-        require(loan.state == States.AwaitingPayment, 'Invalid status for loan matching passed Id');
+        require(loan.state == States.AwaitingPayment, 'Loan is in an invalid state');
         require(request.payUntil < block.number, 'Time stipulated by loan request has not passed');
 
-        // Withdraw guarantee
-        require(loanToken.transfer(loan.lender, request.amount), 'Error occured while transfering guarantee to lender');
-
+        // Update state
         updateRequestState(request.id, States.Overdue);
         updateLoanState(_loanId, States.Overdue);
         updateGuaranteeState(guaranteesMappedToId[guaranteesMappedToRequests[request.id]].id, States.GuaranteeWithdrawn);
+
+        // Withdraw guarantee
+        require(loanToken.transfer(loan.lender, request.amount), 'Error occured while transfering guarantee to lender');
 
         // Emit event
         emit GuaranteeWithdrawn();
