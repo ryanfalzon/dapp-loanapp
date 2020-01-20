@@ -27,7 +27,10 @@ contract GuarantorManager{
         selfdestruct(administrator);
     }
 
-    // Function to add a new guarantor
+    /* Function to add a new guarantor
+    Parameters:
+        address _guarantor - Address of the guarantor to add
+    */
     function addGuarantor(address _guarantor) public IsAdministrator {
 
         // Make sure address passed is not already a manager
@@ -38,7 +41,10 @@ contract GuarantorManager{
         emit GuarantorAdded(_guarantor);
     }
 
-    // Function to remove a guarantor
+    /* Function to remove a guarantor
+    Parameters
+        address _guarantor - Address of the guarantor to remove
+    */
     function removeGuarantor(address _guarantor) public IsAdministrator {
 
         // Make sure address passed is actually a guarantor
@@ -58,11 +64,12 @@ contract GuarantorManager{
         emit GuarantorDeleted(_guarantor);
     }
 
+    // Function to get all the guarantorsz
     function getGuarantors() public view returns(address[] memory) {
         return guarantors;
     }
 
-    // Function to check of message sender is the administrator
+    // Modifier to check of message sender is the administrator
     modifier IsAdministrator(){
         require((administrator == msg.sender), "Only Administrators Are Able To Run This Function");
         _;

@@ -26,7 +26,7 @@ contract('LoanManager', function(accounts){
 
             return loanManagerInstance.registry();
         }).then(function(address) {
-            // Test that the guarantor manager contract was set when deploying contract
+            // Test that the contract registry was set when deploying contract
             assert.notEqual(address, 0x0, 'has contract registry address');
         });
     });
@@ -114,15 +114,17 @@ contract('LoanManager', function(accounts){
 
             return loanManagerInstance.getGuarantee(guaranteeId);
         }).then(function(guarantee){
-
+            // Test that when successfully calling the submitGuarantee function the guarantee object is added to the list
             assert(guaranteeId, guarantee.id, 'guarantee object added');
 
             return loanManagerInstance.getRequestGuarantee(requestId);
         }).then(function(id){
+            // Test that when successfully calling the submitGuarantee function the guarantee is mapped to the request
             assert(id, guaranteeId, 'guarantee mapped to request');
 
             return loanManagerInstance.getRequest(requestId);
         }).then(function (request){
+            // Test that when successfully calling the submitGuarantee function the request status is updated
             assert(request[5], 1, 'request status updated');
         });
     });
@@ -132,19 +134,23 @@ contract('LoanManager', function(accounts){
             loanManagerInstance = instance;
             return loanManagerInstance.acceptGuarantee.call(requestId, { from: lender });
         }).then(assert.fail).catch(function(error){
+            // Test that if the acceptGuarantee function is called from an address that did not create the request, an error is thrown
             assert(error.message.indexOf('revert') >= 0, 'error message must contain revert');
 
             return loanManagerInstance.acceptGuarantee(requestId, { from: borrower });
         }).then(function (receipt){
+            // Test that when successful calling the acceptGuarantee function, the GuarnateeAccepted event is emitted with no arguments
             assert.equal(receipt.logs.length, 1, 'triggers one event');
             assert.equal(receipt.logs[0].event, 'GuaranteeAccepted', 'should be the GuaranteeAccepted event');
 
             return loanManagerInstance.getRequest(requestId);
         }).then(function(request){
+            // Test that when successfully calling the acceptGuarantee function, the request status is updated accordingly;
             assert(request[5], 2, 'request status updated');
 
             return loanManagerInstance.getGuarantee(guaranteeId);
         }).then(function(guarantee){
+            // Test that when successfully calling the acceptGuarantee function, the guarantee status is updated accordingly;
             assert(guarantee[3], 5, 'guarantee status updated')
         });
     });
@@ -161,6 +167,7 @@ contract('LoanManager', function(accounts){
 
             return loanManagerInstance.declineGuarantee.call(cancelledRequestId, {from: lender});
         }).then(assert.fail).catch(function(error){
+            // Test that if the declineGuarantee function is called for a request which a guarantee has not yet been providing, an error is thrown;
             assert(error.message.indexOf('revert') >= 0, 'error message must contain revert');
 
             return loanTokenInstance.approve(loanManagerInstance.address, numberOfTokens, {from: guarantor});
@@ -169,17 +176,25 @@ contract('LoanManager', function(accounts){
         }).then(function(receipt){
             guaranteeId = receipt.logs[0].args._guaranteeId;
 
+            return loanManagerInstance.declineGuarantee.call(cancelledRequestId, { from: lender });
+        }).then(assert.fail).catch(function(error){
+            // Test that if the declineGuarantee function is called from an address that did not create the request, an error is thrown
+            assert(error.message.indexOf('revert') >= 0, 'error message must contain revert');
+
             return loanManagerInstance.declineGuarantee(cancelledRequestId, {from: borrower});
         }).then(function (receipt){
+            // Test that when successful calling the declineGuarantee function, the GuarnateeDeclined event is emitted with no arguments
             assert.equal(receipt.logs.length, 1, 'triggers one event');
             assert.equal(receipt.logs[0].event, 'GuaranteeDeclined', 'should be the GuaranteeDeclined event');
 
             return loanManagerInstance.getRequest(cancelledRequestId);
         }).then(function(request){
+            // Test that when successfully calling the declineGuarantee function, the request status is updated accordingly;
             assert(request[5], 3, 'request status updated');
 
             return loanManagerInstance.getGuarantee(guaranteeId);
         }).then(function(guarantee){
+            // Test that when successfully calling the declineGuarantee function, the guarantee status is updated accordingly;
             assert(guarantee[3], 3, 'guarantee status updated');
         });
     });
@@ -194,11 +209,13 @@ contract('LoanManager', function(accounts){
         }).then(function(receipt){
             return loanManagerInstance.submitLoan(receipt.logs[0].args._requestId, {from: lender});
         }).then(assert.fail).catch(function(error){
-            assert(error.message.indexOf('revert') >= 0, 'msg.value must equal number of tokens in wei');
+            // Test that if the submitLoan is called with a request that is in an invalid state, an error is thrown;
+            assert(error.message.indexOf('revert') >= 0, 'request is in an invalid status');
 
             return loanManagerInstance.submitLoan(requestId, {from: lender});
         }).then(assert.fail).catch(function(error){
-            assert(error.message.indexOf('revert') >= 0, 'msg.value must equal number of tokens in wei');
+            // Test that if the submitLoan function is called without delegating tokens, an error is thrown;
+            assert(error.message.indexOf('revert') >= 0, 'tokens were not delegated');
 
             return loanTokenInstance.transfer(lender, 100);
         }).then(function(){
@@ -206,6 +223,7 @@ contract('LoanManager', function(accounts){
         }).then(function(){
             return loanManagerInstance.submitLoan(requestId, {from: lender});
         }).then(function(receipt){
+            // Test that when successfully calling the submitLoan function, the LoanSubmitted event is emitted with one argument;
             assert.equal(receipt.logs.length, 1, 'triggers one event');
             assert.equal(receipt.logs[0].event, 'LoanSubmitted', 'should be the LoanSubmitted event');
             assert.notEqual(receipt.logs[0].args._loanId, 0x0, 'logs the generated guarantee id');
@@ -213,22 +231,27 @@ contract('LoanManager', function(accounts){
 
             return loanManagerInstance.getLenderLoans(lender);
         }).then(function(loans){
+            // Test that when successfully calling the submitLoan function, the loan is added to the mapping between an address and the loans issued by that address;
             assert(loans.length, 1, 'adds loan to lender loans');
 
             return loanManagerInstance.getLoans();
         }).then(function(loans){
+            // Test that when successfully calling the submitLoan function, the loan id should be added to the loan list;
             assert(loans.length, 1, 'loan added to list');
 
             return loanManagerInstance.getLoan(loanId);
         }).then(function(loan){
+            // Test that when successfully calling the submitLoan function, the loan object is added to the mapping between the loan id and the loan object;
             assert(loanId, loan.id, 'loan object added');
 
             return loanManagerInstance.getLoanRequest(loanId);
         }).then(function(id){
+            // Test that when successfully calling the submitLoan function, the loan is mapped to the request;
             assert(id, requestId, 'loan mapped to request');
 
             return loanManagerInstance.getRequest(requestId);
         }).then(function (request){
+            // Test that when successfully calling the submitLoan function, the request status is updated accordingly;
             assert(request[5], 2, 'request status updated');
         });
     });
@@ -241,7 +264,8 @@ contract('LoanManager', function(accounts){
             loanTokenInstance = instance;
             return loanManagerInstance.repayLoan(loanId, {from: borrower});
         }).then(assert.fail).catch(function(error){
-            assert(error.message.indexOf('revert') >= 0, 'msg.value must equal number of tokens in wei');
+            // Test that if the repayLoan function is called without delegating tokens, an error is thrown
+            assert(error.message.indexOf('revert') >= 0, 'tokens were not delegated');
 
             return loanTokenInstance.transfer(borrower, 150);
         }).then(function(){
@@ -249,20 +273,24 @@ contract('LoanManager', function(accounts){
         }).then(function(){
             return loanManagerInstance.repayLoan(loanId, {from: borrower});
         }).then(function(receipt){
+            // Test that when successfully calling the repayLoan function, the LoanRepaid event is emitted with no arguments
             assert.equal(receipt.logs.length, 1, 'triggers one event');
             assert.equal(receipt.logs[0].event, 'LoanRepaid', 'should be the LoanRepaid event');
 
             return loanManagerInstance.repayLoan(loanId, {from: borrower});
         }).then(assert.fail).catch(function(error){
-            assert(error.message.indexOf('revert') >= 0, 'msg.value must equal number of tokens in wei');
+            // Test that is the repayLoan function is called with a loan that is in an invalid state, an error is thrown
+            assert(error.message.indexOf('revert') >= 0, 'loan is in an invalid state');
 
             return loanManagerInstance.getRequest(requestId);
         }).then(function (request){
-            assert(request[5], 3, 'request status updated');
+            // Test that when successfully calling the repayLoan  function, the request status is updated accordingly
+            assert(request[5], 3, 'request status not updated');
 
             return loanManagerInstance.getLoan(loanId);
         }).then(function(loan){
-            assert(loan[2], 4, 'loan status updated');
+            // Test that when successfully calling the repayLoan function, the loan status is updated accordingly
+            assert(loan[2], 4, 'loan status not updated');
         });
     })
 
@@ -296,19 +324,23 @@ contract('LoanManager', function(accounts){
 
             return loanManagerInstance.withdrawGuarantee(loanId, {from: lender});
         }).then(assert.fail).catch(function(error){
+            // Test that if the withdrawGuarantee is called before the repay block defined by the borrower, an error is thrown
             assert(error.message.indexOf('revert') >= 0, 'msg.value must equal number of tokens in wei');
 
             return loanManagerInstance.withdrawGuarantee(loanId, {from: lender});
         }).then(function(receipt){
+            // Test that when successfully calling the withdrawGuarantee function, the GuaranteeWithdrawn event is emitted with no arguments
             assert.equal(receipt.logs.length, 1, 'triggers one event');
             assert.equal(receipt.logs[0].event, 'GuaranteeWithdrawn', 'should be the GuaranteeWithdrawn event');
 
             return loanManagerInstance.getGuarantee(guaranteeId);
         }).then(function(guarantee){
+            // Test that when successfully calling the withdrawGuarantee function, the guarantee status is updated accordingly
             assert(guarantee[2], 6, 'guarantee status updated');
 
             return loanManagerInstance.getLoan(loanId);
         }).then(function(loan){
+            // Test that when successfully calling the withdrawGuarantee function, the loan status is updated accordingly
             assert(loan[2], 7, 'loan status updated');
         });
     })

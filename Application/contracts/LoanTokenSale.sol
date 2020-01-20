@@ -51,11 +51,10 @@ contract LoanTokenSale {
     }
 
     // Function to end the token sale
-    function DestroyContract() public IsAdministrator {
+    function destroyContract() public IsAdministrator {
         // Transfer all tokens owned by the contract to the administrator
         require(LoanToken(registry.getContract('LoanToken'))
-            .transfer(administrator, LoanToken(registry.getContract('LoanToken')).balanceOf(address(this))),
-            'Error occured while loan transfer function was executing');
+            .transfer(administrator, LoanToken(registry.getContract('LoanToken')).balanceOf(address(this))), 'Error occured while loan transfer function was executing');
 
         // Destroy contract and send ether balance of this contract to the administrator
         selfdestruct(administrator);

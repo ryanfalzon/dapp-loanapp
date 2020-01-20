@@ -3,7 +3,7 @@ var GuarantorManager = artifacts.require("./contracts/GuarantorManager.sol");
 contract('GuarantorManager', function(accounts) {
     var guarantorManagerInstance;
 
-    it('initializes the contract', function(){
+    it('should initialize the contract', function(){
         return GuarantorManager.deployed().then(function(instance){
             guarantorManagerInstance = instance;
             return guarantorManagerInstance.address;
@@ -13,7 +13,7 @@ contract('GuarantorManager', function(accounts) {
         });
     });
 
-    it('adds a guarantor', function(){
+    it('should facilitate guarantor addition', function(){
         return GuarantorManager.deployed().then(function(instance){
             guarantorManagerInstance = instance;
             return guarantorManagerInstance.addGuarantor.call(accounts[1], {from: accounts[2]});
@@ -45,7 +45,7 @@ contract('GuarantorManager', function(accounts) {
         });
     });
 
-    it('deletes a guarantor', function(){
+    it('should facilitate guarantor removal', function(){
         return GuarantorManager.deployed().then(function(instance){
             guarantorManagerInstance = instance;
             return guarantorManagerInstance.removeGuarantor.call(accounts[1], {from: accounts[2]});

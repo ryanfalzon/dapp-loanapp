@@ -3,6 +3,7 @@ import Grid from '@material-ui/core/Grid';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 import Card from '@material-ui/core/Card';
+import LinearProgress from '@material-ui/core/LinearProgress';
 import CardContent from '@material-ui/core/CardContent';
 import TextField from '@material-ui/core/TextField';
 
@@ -14,7 +15,8 @@ class BuyTokens extends Component {
         super(props);
         this.state = {
             balance: 0,
-            amount: 0
+            amount: 0,
+            percentageSold: 0
         };
     };
 
@@ -33,7 +35,13 @@ class BuyTokens extends Component {
 
     async updateState(){
         const balance = await this.loanTokenContract.methods.balanceOf(this.account).call();
-        this.setState({ balance })
+        this.setState({ balance });
+
+        const availableTokens = await this.loanTokenContract.methods.balanceOf(this.loanTokenSaleContract._address).call();
+        const tokensSold = await this.loanTokenSaleContract.methods.tokensSold().call();
+        const percentageSold = (tokensSold * 100) / availableTokens;
+        this.setState({ percentageSold });
+        
     }
 
     changeHanlder = (event) => {
@@ -51,6 +59,8 @@ class BuyTokens extends Component {
                     value: (this.state.amount * this.tokenPrice),
                     gas: 100000
                 });
+
+                this.updateState();
             }
             catch(e){
                 alert('An error has occured while buying tokens');
@@ -128,6 +138,8 @@ class BuyTokens extends Component {
                     </Grid>
 
                 </CardContent>
+
+                <LinearProgress variant="determinate" value={this.state.percentageSold} color="secondary" />
             </Card>
         );
     }

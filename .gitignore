@@ -6,8 +6,5 @@
 /Application/app/.vs
 /Application/app/src/.vs
 /Application/app/node_modules
-Application/build/contracts/GuarantorManager.json
-Application/build/contracts/LoanManager.json
-Application/build/contracts/LoanToken.json
-Application/build/contracts/LoanTokenSale.json
-Application/build/contracts/Migrations.json
+/Application/build
+/Application/app/src/ContractArtifects
