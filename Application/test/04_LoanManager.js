@@ -24,15 +24,10 @@ contract('LoanManager', function(accounts){
             // Test that administrator was set when deploying contract
             assert.notEqual(address, 0x0, 'has contract administrator address');
 
-            return loanManagerInstance.guarantorManager();
+            return loanManagerInstance.registry();
         }).then(function(address) {
             // Test that the guarantor manager contract was set when deploying contract
-            assert.notEqual(address, 0x0, 'has guarantor manager contract address');
-
-            return loanManagerInstance.loanToken();
-        }).then(function(address) {
-            // Test that the loan token contract was set when deploying contract
-            assert.notEqual(address, 0x0, 'has token contract address');
+            assert.notEqual(address, 0x0, 'has contract registry address');
         });
     });
 
@@ -87,18 +82,21 @@ contract('LoanManager', function(accounts){
             loanManagerInstance = instance;
             return loanManagerInstance.submitGuarantee.call(requestId, 5, {from: guarantor});
         }).then(assert.fail).catch(function(error){
+            // Test that if he submitGuarantee function is called without delegating tokens it fails
             assert(error.message.indexOf('revert') >= 0, 'error message must contain revert');
 
             return loanTokenInstance.transfer(guarantor, 1000);
         }).then(function(){
             return loanManagerInstance.submitGuarantee.call(requestId, 1000, {from: guarantor});
         }).then(assert.fail).catch(function(error){
+            // Test that if the submitGuarantee function is called with a higher interest than that given by the borrower it fails
             assert(error.message.indexOf('revert') >= 0, 'error message must contain revert');
 
             return loanTokenInstance.approve(loanManagerInstance.address, numberOfTokens, {from: guarantor});
         }).then(function(){
             return loanManagerInstance.submitGuarantee(requestId, 2, {from: guarantor});
         }).then(function(receipt){
+            // Test that when successfully calling the submitGuarantee function the GuaranteeSUbmitted event is emitted
             assert.equal(receipt.logs.length, 1, 'triggers one event');
             assert.equal(receipt.logs[0].event, 'GuaranteeSubmitted', 'should be the GuaranteeSubmitted event');
             assert.notEqual(receipt.logs[0].args._guaranteeId, 0x0, 'logs the generated guarantee id');
@@ -106,10 +104,12 @@ contract('LoanManager', function(accounts){
 
             return loanManagerInstance.getGuarantorGuarantees(guarantor);
         }).then(function(guarantees){
+            // Test that when successfully calling the submitGuarantee function the guarantee is added to the guarantor guarantees mapping
             assert(guarantees.length, 1, 'adds guarantee to guarantor guarantee');
 
             return loanManagerInstance.getGuarantees();
         }).then(function(guarantees){
+            // Test that when successfully calling the submitGuarantee function the guarantee is added to the guarantees list
             assert(guarantees.length, 1, 'guarantee added to list');
 
             return loanManagerInstance.getGuarantee(guaranteeId);

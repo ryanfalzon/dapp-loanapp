@@ -1,7 +1,7 @@
 var LoanToken = artifacts.require('./LoanToken.sol');
 var LoanTokenSale = artifacts.require('./LoanTokenSale.sol');
 
-contract('DappTokenSale', function(accounts) {
+contract('LoanTokenSale', function(accounts) {
     var tokenInstance;
     var tokenSaleInstance;
     var admin = accounts[0];
@@ -10,7 +10,7 @@ contract('DappTokenSale', function(accounts) {
     var tokensAvailable = 750000;
     var numberOfTokens;
 
-    it('initializes the contract with the correct values', function() {
+    it('should initialize the contract with the correct values', function() {
         return LoanTokenSale.deployed().then(function(instance) {
             tokenSaleInstance = instance;
             return tokenSaleInstance.address
@@ -18,10 +18,10 @@ contract('DappTokenSale', function(accounts) {
             // Test that contract has been deployed successfully
             assert.notEqual(address, 0x0, 'has contract address');
 
-            return tokenSaleInstance.loanToken();
+            return tokenSaleInstance.registry();
         }).then(function(address) {
-            // Test that token address has been set correctly when contract is deployed
-            assert.notEqual(address, 0x0, 'has token contract address');
+            // Test that contract registry address has been set correctly when contract is deployed
+            assert.notEqual(address, 0x0, 'has contract registry address');
 
             return tokenSaleInstance.tokenPrice();
         }).then(function(price) {
@@ -30,7 +30,7 @@ contract('DappTokenSale', function(accounts) {
         });
     });
 
-    it('facilitates token buying', function() {
+    it('should facilitate token buying', function() {
         return LoanToken.deployed().then(function(instance) {
             tokenInstance = instance;
             return LoanTokenSale.deployed();

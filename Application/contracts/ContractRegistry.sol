@@ -1,6 +1,6 @@
 pragma solidity ^0.5.11;
 
-contract NameRegistry {
+contract ContractRegistry {
 
     // Contract Properties
     mapping(string => ContractDetails) registry;
@@ -25,7 +25,6 @@ contract NameRegistry {
 
         // Get contract details
         ContractDetails memory contractDetails = registry[_name];
-        require(contractDetails.owner == msg.sender, '');
 
         // Check if contract details already exists
         if(contractDetails.contractAddress == address(0)){
@@ -35,6 +34,7 @@ contract NameRegistry {
             contractDetails = ContractDetails(msg.sender, _address, _version);
         }
         else{
+            require(contractDetails.owner == msg.sender, '');
             contractDetails.version = _version;
             contractDetails.contractAddress = _address;
         }
@@ -48,8 +48,8 @@ contract NameRegistry {
     Parameters:
         string _name - The name of the contract whose details are to be returned
     */
-    function getContractDetails(string memory _name) public view returns(address, uint16) {
+    function getContract(string memory _name) public view returns(address) {
         ContractDetails memory contractDetails = registry[_name];
-        return (contractDetails.contractAddress, contractDetails.version);
+        return (contractDetails.contractAddress);
     }
 }

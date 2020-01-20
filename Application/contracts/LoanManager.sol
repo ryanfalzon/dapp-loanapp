@@ -1,5 +1,6 @@
 pragma solidity ^0.5.11;
 
+import './ContractRegistry.sol';
 import './LoanToken.sol';
 import './GuarantorManager.sol';
 
@@ -7,8 +8,7 @@ contract LoanManager{
 
     // Contract properties
     address public administrator;
-    GuarantorManager public guarantorManager;
-    LoanToken public loanToken;
+    ContractRegistry public registry;
     bytes32[] private requests;
     bytes32[] private guarantees;
     bytes32[] private loans;
@@ -75,10 +75,9 @@ contract LoanManager{
     }
 
     // Contract constructor
-    constructor(GuarantorManager _guarantorManager, LoanToken _loanToken) public {
+    constructor(ContractRegistry _registry) public {
         administrator = msg.sender;
-        guarantorManager = _guarantorManager;
-        loanToken = _loanToken;
+        registry = _registry;
     }
 
     /* Function to submit a request for a loan
@@ -147,7 +146,8 @@ contract LoanManager{
         // Check request parameters - Interest should be less than that specified in request and guarantor should have enough tokens
         require(request.state == States.AwaitingGuarantee, 'Request is in an invalid state');
         require(_interestRequest <= request.interest, 'Interest should be less than interest offered by borrower');
-        require(loanToken.balanceOf(msg.sender) >= request.amount, 'You do not have enough tokens to guarantee this loan');
+        require(LoanToken(registry.getContract('LoanToken')).balanceOf(msg.sender) >= request.amount,
+            'You do not have enough tokens to guarantee this loan');
 
 
         // Create the guarantee object
@@ -156,7 +156,8 @@ contract LoanManager{
 
         // Transfer tokens from guarantor to address of this contract
         updateRequestState(_requestId, States.AwaitingGuaranteeApproval);
-        require(loanToken.transferFrom(msg.sender, address(this), request.amount), 'Error occured while withdrawing tokens from message sender');
+        require(LoanToken(registry.getContract('LoanToken')).transferFrom(msg.sender, address(this), request.amount),
+            'Error occured while withdrawing tokens from message sender');
 
         // Store guarantee
         guaranteesMappedToId[id] = guarantee;
@@ -232,7 +233,7 @@ contract LoanManager{
         updateGuaranteeState(guaranteesMappedToRequests[_requestId], States.Cancelled);
 
         // Send money back to guarantor
-        require(loanToken.transfer(guarantee.guarantor, request.amount),
+        require(LoanToken(registry.getContract('LoanToken')).transfer(guarantee.guarantor, request.amount),
             'An error occured while transfering tokens from contract to guarantor');
 
         // Emit event
@@ -245,6 +246,7 @@ contract LoanManager{
     */
     function submitLoan(bytes32 _requestId) public RequireLenderNotToBeGuarantor(_requestId) payable {
         Request memory request = requestsMappedToId[_requestId];
+        LoanToken loanToken = LoanToken(registry.getContract('LoanToken'));
 
         // Check request paramaters - guarantee needs to be accepted and lender needs to have enough tokens
         require(request.state == States.AwaitingLoan, 'Request is in an invalid state');
@@ -306,6 +308,7 @@ contract LoanManager{
         bytes32 _loanId - id of the loan the borrower is going to be paying back
     */
     function repayLoan(bytes32 _loanId) public RequireLoanBorrowerStatus(_loanId) payable {
+        LoanToken loanToken = LoanToken(registry.getContract('LoanToken'));
         Request memory request = requestsMappedToId[requestsMappedToLoans[_loanId]];
         Guarantee memory guarantee = guaranteesMappedToId[guaranteesMappedToRequests[request.id]];
         Loan memory loan = loansMappedToId[_loanId];
@@ -352,7 +355,8 @@ contract LoanManager{
         updateGuaranteeState(guaranteesMappedToId[guaranteesMappedToRequests[request.id]].id, States.GuaranteeWithdrawn);
 
         // Withdraw guarantee
-        require(loanToken.transfer(loan.lender, request.amount), 'Error occured while transfering guarantee to lender');
+        require(LoanToken(registry.getContract('LoanToken')).transfer(loan.lender, request.amount),
+            'Error occured while transfering guarantee to lender');
 
         // Emit event
         emit GuaranteeWithdrawn();
@@ -398,7 +402,8 @@ contract LoanManager{
 
     // Modifier to check if message sneder is a guarantor
     modifier RequireGuarantorStatus(){
-        require(guarantorManager.isGuarantor(msg.sender) == true, "Guarantor status required");
+        require(GuarantorManager(registry.getContract('GuarantorManager')).isGuarantor(msg.sender) == true,
+            "Guarantor status required");
         _;
     }
 
