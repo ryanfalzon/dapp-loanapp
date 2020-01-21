@@ -10,6 +10,11 @@ contract('GuarantorManager', function(accounts) {
         }).then(function(address){
             // Test that contract has been deployed successfully
             assert.notEqual(address, 0x0, 'has contract address');
+            
+            return guarantorManagerInstance.administrator();
+        }).then(function(administrator){
+            // Test that administrator has been set correctly when contract is deployed
+            assert.equal(accounts[0], administrator, 'administrator is incorrect');
         });
     });
 

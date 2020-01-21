@@ -43,7 +43,7 @@ contract GuarantorManager{
 
     /* Function to remove a guarantor
     Parameters
-        address _guarantor - Address of the guarantor to remove
+        address _guarantor - Address of the guarantor to be removed
     */
     function removeGuarantor(address _guarantor) public IsAdministrator {
 

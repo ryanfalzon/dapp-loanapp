@@ -8,7 +8,7 @@ contract LoanTokenSale {
     using SafeMath for uint256;
 
     // Contract properties
-    address payable administrator;
+    address payable public administrator;
     ContractRegistry public registry;
     uint256 public tokenPrice;
     uint256 public tokensSold;

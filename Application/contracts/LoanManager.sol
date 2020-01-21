@@ -290,9 +290,9 @@ contract LoanManager{
     Parameters:
         bytes32 _loanId - id of the loan to be returned
     */
-    function getLoan(bytes32 _loanId) public view returns(bytes32, address, States){
+    function getLoan(bytes32 _loanId) public view returns(bytes32, address, uint256, States){
         Loan memory loan = loansMappedToId[_loanId];
-        return (loan.id, loan.lender, loan.state);
+        return (loan.id, loan.lender, loan.interest, loan.state);
     }
 
     /* Function to get a list of loans for a lender address

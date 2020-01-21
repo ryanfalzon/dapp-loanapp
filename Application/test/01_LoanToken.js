@@ -87,7 +87,7 @@ contract('LoanToken', function(accounts) {
             return tokenInstance.allowance(accounts[0], accounts[1]);
         }).then(function(allowance){
             // Test that a successfull approve function updates the allowed balance of the receiver
-            assert(allowance, 100, 'stored the allowance for delegated transfer');
+            assert.equal(allowance, 100, 'stored the allowance for delegated transfer');
         });
     });
 

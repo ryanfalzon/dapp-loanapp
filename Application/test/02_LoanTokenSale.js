@@ -7,7 +7,7 @@ contract('LoanTokenSale', function(accounts) {
     var admin = accounts[0];
     var buyer = accounts[1];
     var tokenPrice = 1000000000000000;
-    var tokensAvailable = 750000;
+    var tokensAvailable = 100;
     var numberOfTokens;
 
     it('should initialize the contract with the correct values', function() {
@@ -17,6 +17,11 @@ contract('LoanTokenSale', function(accounts) {
         }).then(function(address) {
             // Test that contract has been deployed successfully
             assert.notEqual(address, 0x0, 'has contract address');
+
+            return tokenSaleInstance.administrator();
+        }).then(function(administrator) {
+            // Test that administrator has been set correctly when contract is deployed
+            assert.equal(administrator, admin, 'administrator is incorrect');
 
             return tokenSaleInstance.registry();
         }).then(function(address) {
@@ -72,7 +77,7 @@ contract('LoanTokenSale', function(accounts) {
             // Test that if the amount of ether does not match the number of tokens being bought multiplied by the token price results in an exception
             assert(error.message.indexOf('revert') >= 0, 'msg.value must equal number of tokens in wei');
 
-            numberOfTokens = 800000;
+            numberOfTokens = 110;
             return tokenSaleInstance.buy(numberOfTokens, { from: buyer, value: numberOfTokens * tokenPrice })
         }).then(assert.fail).catch(function(error) {
             // Test that if the amount of tokens being bought is greater than the amount available results in an exception
