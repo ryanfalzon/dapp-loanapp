@@ -40,7 +40,8 @@ class Loans extends Component {
                 loans.push({
                     id: loan[0],
                     lender: loan[1],
-                    status: loan[2]
+                    interest: loan[2],
+                    status: loan[3]
                 });
                 
                 if(index === array.length - 1) resolve();
@@ -51,14 +52,40 @@ class Loans extends Component {
             this.setState({loans});
         });
     }
+
+    withdrawGuaranteeHandler = async (event, item) => {
+        event.preventDefault();
+        try{
+            // const loanId = await this.loanManagerContract.methods.getRequestLoan(item.id).call();
+            await this.loanManagerContract.methods.withdrawGuarantee(item.id).send({
+                from: this.account
+            });
+        }
+        catch(e){
+            alert('An error has occured while repaying loan');
+        }
+        finally{
+            this.updateState();
+        }
+    }
+
     
     getStatusName = (statusId) => {
         switch (statusId) {
             case '3':
                 return 'Cancelled'
 
+            case '4':
+                return 'Completed'
+
             case '5':
                 return 'Awaiting Payment'
+
+            case '6':
+                return 'Guarantee Withdrawn'
+
+            case '7':
+                return 'Overdue'
         
             default:
                 return 'Unknown'
@@ -91,16 +118,19 @@ class Loans extends Component {
                                                 >
                                                     Status: {this.getStatusName(item.status)}
                                                 </Typography>
+                                                {" - Interest: " + item.interest}
                                             </React.Fragment>
                                         }
                                     />
-                                    <ListItemSecondaryAction>
-                                        <Tooltip title="Withdraw Guarantee">
-                                            <IconButton edge="end" aria-label="withdrawGuarantee">
-                                                <IconArrowUpward />
-                                            </IconButton>
-                                        </Tooltip>
-                                    </ListItemSecondaryAction>
+                                    {item.status === '5' &&
+                                        <ListItemSecondaryAction>
+                                            <Tooltip title="Withdraw Guarantee">
+                                                <IconButton edge="end" aria-label="withdrawGuarantee" onClick={(event) => this.withdrawGuaranteeHandler(event, item)}>
+                                                    <IconArrowUpward />
+                                                </IconButton>
+                                            </Tooltip>
+                                        </ListItemSecondaryAction>
+                                    }
                                 </ListItem>
                                 <Divider component="li" />
                             </div>

@@ -33,8 +33,28 @@ class SubmitLoan extends Component {
     }
 
     async updateState(){
-        let requests = await this.loanManagerContract.methods.getRequests().call();
-        this.setState({requests});
+        let requestIds = await this.loanManagerContract.methods.getRequests().call();
+        let requests = [];
+        
+        var getRequestsPromise = new Promise((resolve, reject) => {
+            requestIds.forEach(async(requestId, index, array) => {
+                let request = await this.loanManagerContract.methods.getRequest(requestId).call();
+                requests.push({
+                    id: request[0],
+                    borrower: request[1],
+                    amount: request[2],
+                    repayBy: request[3],
+                    interest: request[4],
+                    status: request[5]
+                });
+                if(index === array.length - 1) resolve();
+            });
+        })
+        
+        getRequestsPromise.then(() => {
+            requests = requests.filter(request => request.status === '2').map(request => request.id);
+            this.setState({requests});
+        });
     }
 
     changeHanlder = async (event) => {
